@@ -1,0 +1,19 @@
+# OpenEnv v3.0 Specification
+# KubeCost-Gym: Kubernetes Cost Optimization Environment
+
+name: kubecost-gym
+version: "3.0"
+description: "Kubernetes cost optimization via proactive autoscaling decisions with RL agents."
+
+tasks:
+  - name: cold_start
+    difficulty: easy
+    description: "Scale cluster from 0→5 replicas without SLA breach (p99_latency_ms < 300ms)."
+    
+  - name: efficient_squeeze
+    difficulty: medium
+    description: "Maintain cpu_steal_pct < 20% across complete 24-hour sinusoidal load cycle while minimizing cost."
+    
+  - name: entropy_storm
+    difficulty: hard
+    description: "Issue REBALANCE_NODE action before cpu_steal_pct exceeds 20% using only leading indicators (proactive reasoning required)."

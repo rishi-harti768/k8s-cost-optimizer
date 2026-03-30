@@ -1,0 +1,167 @@
+{
+    "task_name": "cold_start",
+    "task_difficulty": "easy",
+    "description": "Scale cluster from 0→5 replicas without SLA breach (p99_latency_ms < 300ms)",
+    "steps": [
+        {
+            "step": 0,
+            "observation": {
+                "cpu_usage_pct": 5.0,
+                "mem_usage_pct": 10.0,
+                "p99_latency_ms": 80.0,
+                "http_error_rate": 0.02,
+                "cpu_steal_pct": 0.01,
+                "active_replicas": 0,
+                "buffer_depth": 500,
+                "node_size_class": "S",
+                "current_hourly_cost": 10.0,
+                "node_bin_density": [
+                    0.1,
+                    0.1,
+                    0.1,
+                    0.1,
+                    0.1,
+                    0.1,
+                    0.1,
+                    0.1,
+                    0.1,
+                    0.1
+                ]
+            },
+            "action": "MAINTAIN",
+            "dynamics": {
+                "next_replicas": 0,
+                "next_node_size": "S",
+                "reason": "initial_state"
+            }
+        },
+        {
+            "step": 1,
+            "observation": {
+                "cpu_usage_pct": 8.0,
+                "mem_usage_pct": 12.0,
+                "p99_latency_ms": 150.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.02,
+                "active_replicas": 0,
+                "buffer_depth": 800,
+                "node_size_class": "S",
+                "current_hourly_cost": 10.0,
+                "node_bin_density": [
+                    0.12,
+                    0.11,
+                    0.1,
+                    0.12,
+                    0.1,
+                    0.11,
+                    0.1,
+                    0.12,
+                    0.1,
+                    0.11
+                ]
+            },
+            "action": "MAINTAIN",
+            "dynamics": {
+                "next_replicas": 0,
+                "next_node_size": "S",
+                "reason": "load_increasing"
+            }
+        },
+        {
+            "step": 2,
+            "observation": {
+                "cpu_usage_pct": 15.0,
+                "mem_usage_pct": 20.0,
+                "p99_latency_ms": 200.0,
+                "http_error_rate": 0.02,
+                "cpu_steal_pct": 0.03,
+                "active_replicas": 0,
+                "buffer_depth": 1200,
+                "node_size_class": "S",
+                "current_hourly_cost": 10.0,
+                "node_bin_density": [
+                    0.15,
+                    0.14,
+                    0.16,
+                    0.15,
+                    0.14,
+                    0.15,
+                    0.16,
+                    0.14,
+                    0.15,
+                    0.15
+                ]
+            },
+            "action": "MAINTAIN",
+            "dynamics": {
+                "next_replicas": 0,
+                "next_node_size": "S",
+                "reason": "load_increasing"
+            }
+        },
+        {
+            "step": 3,
+            "observation": {
+                "cpu_usage_pct": 25.0,
+                "mem_usage_pct": 30.0,
+                "p99_latency_ms": 280.0,
+                "http_error_rate": 0.03,
+                "cpu_steal_pct": 0.05,
+                "active_replicas": 0,
+                "buffer_depth": 1800,
+                "node_size_class": "S",
+                "current_hourly_cost": 10.0,
+                "node_bin_density": [
+                    0.25,
+                    0.24,
+                    0.26,
+                    0.25,
+                    0.24,
+                    0.25,
+                    0.26,
+                    0.24,
+                    0.25,
+                    0.25
+                ]
+            },
+            "action": "MAINTAIN",
+            "dynamics": {
+                "next_replicas": 0,
+                "next_node_size": "S",
+                "reason": "warning_zone_p99"
+            }
+        },
+        {
+            "step": 4,
+            "observation": {
+                "cpu_usage_pct": 35.0,
+                "mem_usage_pct": 40.0,
+                "p99_latency_ms": 350.0,
+                "http_error_rate": 0.05,
+                "cpu_steal_pct": 0.08,
+                "active_replicas": 0,
+                "buffer_depth": 2500,
+                "node_size_class": "S",
+                "current_hourly_cost": 10.0,
+                "node_bin_density": [
+                    0.35,
+                    0.34,
+                    0.36,
+                    0.35,
+                    0.34,
+                    0.35,
+                    0.36,
+                    0.34,
+                    0.35,
+                    0.35
+                ]
+            },
+            "action": "MAINTAIN",
+            "dynamics": {
+                "next_replicas": 0,
+                "next_node_size": "S",
+                "reason": "sla_breach_p99"
+            }
+        }
+    ]
+}

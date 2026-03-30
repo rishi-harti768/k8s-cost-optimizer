@@ -1,0 +1,206 @@
+{
+    "task_name": "efficient_squeeze",
+    "task_difficulty": "medium",
+    "description": "Maintain cpu_steal_pct < 20% across 24-hour sinusoidal load cycle while minimizing cost",
+    "duration_hours": 24,
+    "steps": [
+        {
+            "step": 0,
+            "hour": 0,
+            "observation": {
+                "cpu_usage_pct": 20.0,
+                "mem_usage_pct": 25.0,
+                "p99_latency_ms": 120.0,
+                "http_error_rate": 0.005,
+                "cpu_steal_pct": 0.05,
+                "active_replicas": 3,
+                "buffer_depth": 100,
+                "node_size_class": "M",
+                "current_hourly_cost": 50.0,
+                "node_bin_density": [
+                    0.2,
+                    0.22,
+                    0.21,
+                    0.2,
+                    0.22,
+                    0.21,
+                    0.2,
+                    0.22,
+                    0.21,
+                    0.2
+                ]
+            },
+            "action": "MAINTAIN",
+            "dynamics": {
+                "next_replicas": 3,
+                "next_node_size": "M",
+                "reason": "low_load_baseline"
+            }
+        },
+        {
+            "step": 1,
+            "hour": 1,
+            "observation": {
+                "cpu_usage_pct": 30.0,
+                "mem_usage_pct": 35.0,
+                "p99_latency_ms": 180.0,
+                "http_error_rate": 0.008,
+                "cpu_steal_pct": 0.08,
+                "active_replicas": 3,
+                "buffer_depth": 200,
+                "node_size_class": "M",
+                "current_hourly_cost": 50.0,
+                "node_bin_density": [
+                    0.3,
+                    0.32,
+                    0.31,
+                    0.3,
+                    0.32,
+                    0.31,
+                    0.3,
+                    0.32,
+                    0.31,
+                    0.3
+                ]
+            },
+            "action": "MAINTAIN",
+            "dynamics": {
+                "next_replicas": 3,
+                "next_node_size": "M",
+                "reason": "mild_load_increase"
+            }
+        },
+        {
+            "step": 2,
+            "hour": 6,
+            "observation": {
+                "cpu_usage_pct": 55.0,
+                "mem_usage_pct": 60.0,
+                "p99_latency_ms": 220.0,
+                "http_error_rate": 0.02,
+                "cpu_steal_pct": 0.15,
+                "active_replicas": 3,
+                "buffer_depth": 500,
+                "node_size_class": "M",
+                "current_hourly_cost": 50.0,
+                "node_bin_density": [
+                    0.55,
+                    0.57,
+                    0.56,
+                    0.55,
+                    0.57,
+                    0.56,
+                    0.55,
+                    0.57,
+                    0.56,
+                    0.55
+                ]
+            },
+            "action": "MAINTAIN",
+            "dynamics": {
+                "next_replicas": 3,
+                "next_node_size": "M",
+                "reason": "peak_load_approaching"
+            }
+        },
+        {
+            "step": 3,
+            "hour": 12,
+            "observation": {
+                "cpu_usage_pct": 75.0,
+                "mem_usage_pct": 78.0,
+                "p99_latency_ms": 250.0,
+                "http_error_rate": 0.03,
+                "cpu_steal_pct": 0.25,
+                "active_replicas": 3,
+                "buffer_depth": 1000,
+                "node_size_class": "M",
+                "current_hourly_cost": 50.0,
+                "node_bin_density": [
+                    0.75,
+                    0.77,
+                    0.76,
+                    0.75,
+                    0.77,
+                    0.76,
+                    0.75,
+                    0.77,
+                    0.76,
+                    0.75
+                ]
+            },
+            "action": "MAINTAIN",
+            "dynamics": {
+                "next_replicas": 3,
+                "next_node_size": "M",
+                "reason": "peak_load_steal_violation"
+            }
+        },
+        {
+            "step": 4,
+            "hour": 18,
+            "observation": {
+                "cpu_usage_pct": 50.0,
+                "mem_usage_pct": 55.0,
+                "p99_latency_ms": 200.0,
+                "http_error_rate": 0.02,
+                "cpu_steal_pct": 0.12,
+                "active_replicas": 3,
+                "buffer_depth": 400,
+                "node_size_class": "M",
+                "current_hourly_cost": 50.0,
+                "node_bin_density": [
+                    0.5,
+                    0.52,
+                    0.51,
+                    0.5,
+                    0.52,
+                    0.51,
+                    0.5,
+                    0.52,
+                    0.51,
+                    0.5
+                ]
+            },
+            "action": "MAINTAIN",
+            "dynamics": {
+                "next_replicas": 3,
+                "next_node_size": "M",
+                "reason": "load_decreasing"
+            }
+        },
+        {
+            "step": 5,
+            "hour": 24,
+            "observation": {
+                "cpu_usage_pct": 22.0,
+                "mem_usage_pct": 26.0,
+                "p99_latency_ms": 110.0,
+                "http_error_rate": 0.006,
+                "cpu_steal_pct": 0.06,
+                "active_replicas": 3,
+                "buffer_depth": 120,
+                "node_size_class": "M",
+                "current_hourly_cost": 50.0,
+                "node_bin_density": [
+                    0.22,
+                    0.24,
+                    0.23,
+                    0.22,
+                    0.24,
+                    0.23,
+                    0.22,
+                    0.24,
+                    0.23,
+                    0.22
+                ]
+            },
+            "action": "MAINTAIN",
+            "dynamics": {
+                "next_replicas": 3,
+                "next_node_size": "M",
+                "reason": "cycle_complete"
+            }
+        }
+    ]
+}

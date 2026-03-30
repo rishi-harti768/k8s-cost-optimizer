@@ -1,0 +1,24 @@
+# requirements.txt
+# Python 3.10+ required (spec §0)
+# Dependencies for KubeCost-Gym RL Environment
+
+# Core environment & validation
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+
+# Google Generative AI (Gemini 2.5 Flash)
+google-generativeai>=0.3.0
+
+# Serialization & configuration
+PyYAML>=6.0
+python-dotenv>=0.21.0
+
+# Data science & utilities
+numpy>=1.24.0
+pandas>=1.5.0
+
+# Development & testing
+pytest>=7.0.0
+pytest-cov>=4.0.0
+black>=23.0.0
+mypy>=1.0.0
