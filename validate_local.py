@@ -283,6 +283,7 @@ def check_dockerfile_build():
     except Exception as e:
         print(f"  ✗ Dockerfile check failed: {e}")
         return False
+def check_traces_directory():
     """Validate traces directory exists."""
     traces_dir = Path("traces")
     if not traces_dir.exists():
