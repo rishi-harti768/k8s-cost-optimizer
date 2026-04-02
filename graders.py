@@ -2,7 +2,7 @@
 """
 Grader implementations (Phase 4: Grader Spec).
 
-Phase 2 Implementation: All grade() stubs replaced with live scoring logic.
+Phase 4 Implementation: Final scoring logic. All grade() stubs replaced with live logic.
 
 Rules enforced across every grader:
   1. Empty trajectory  → return 0.0 explicitly (never divide by zero).

@@ -2,7 +2,7 @@
 """
 KubeCost-Gym Environment (OpenEnv Interface).
 
-Phase 1 Implementation: Physics Engine.
+Phase 3 Implementation: Reward Specification and Physics Logic.
 All methods fully implemented — no stub (pass) bodies remain.
 
 Reference: PROJECT_SPEC.md §2 OpenEnv Interface, §3 Reward Spec, §4 Environment Interface
@@ -89,6 +89,9 @@ class KubeCostEnv:
         # Trajectory log (list[TrajectoryStep]) — filled during step()
         self._trajectory: list[TrajectoryStep] = []
 
+        # Tracking rebalance effect (Task 3)
+        self._rebalance_impact_remaining: int = 0
+
     # ------------------------------------------------------------------
     # OpenEnv Public Interface
     # ------------------------------------------------------------------
@@ -113,6 +116,7 @@ class KubeCostEnv:
         self._replicas = int(obs_raw["active_replicas"])
         self._node_size = NodeSizeClass(obs_raw["node_size_class"])
         self._prev_steal_pct = float(obs_raw["cpu_steal_pct"])
+        self._rebalance_impact_remaining = 0
 
         # Build typed Observation from trace data
         self._current_obs = self._parse_observation(obs_raw)
@@ -146,13 +150,35 @@ class KubeCostEnv:
         # 2. Advance step counter
         self._step += 1
 
-        # 3. Load next observation from trace (deterministic physics)
-        #    If we've gone beyond the trace length, replay last step.
+        # 3. Load next observation from trace (deterministic load background)
         trace_idx = min(self._step, self.total_steps - 1)
         obs_raw = self.steps_data[trace_idx]["observation"]
-
-        # Apply trace physics and action-influenced state overlay.
         new_obs = self._parse_observation(obs_raw)
+
+        # --------------------------------------------------------------
+        # PHYSICS OVERLAY (Phase 1 Remediation)
+        # Making the environment reactive to agent actions.
+        # --------------------------------------------------------------
+        
+        # A. Latency Physics: p99 scaled by capacity
+        # Formula: p99_actual = p99_trace * (expected_replicas + 1) / (agent_replicas + 1)
+        # Default trace expected_replicas is usually 0 or small for these tasks.
+        trace_replicas = int(obs_raw["active_replicas"])
+        latency_factor = (trace_replicas + 1.0) / (self._replicas + 1.0)
+        new_obs.p99_latency_ms *= latency_factor
+        
+        # B. Cost Physics: Base node cost + pod cost
+        # Node S=10, M=25, L=60 (approx hourly)
+        node_costs = {NodeSizeClass.SMALL: 10.0, NodeSizeClass.MEDIUM: 25.0, NodeSizeClass.LARGE: 60.0}
+        pod_unit_cost = 0.5  # $0.5 per pod per hour
+        new_obs.current_hourly_cost = node_costs[self._node_size] + (self._replicas * pod_unit_cost)
+        
+        # C. Steal Physics: REBALANCE_NODE reduces steal for a window
+        if self._rebalance_impact_remaining > 0:
+            new_obs.cpu_steal_pct *= 0.5  # 50% reduction in noisy neighbor impact
+            self._rebalance_impact_remaining -= 1
+            
+        # D. State Update
         new_obs.active_replicas = self._replicas
         new_obs.node_size_class = self._node_size
         self._current_obs = new_obs
@@ -260,10 +286,10 @@ class KubeCostEnv:
             next_tier = min(current_tier + 1, len(_NODE_TIER) - 1)
             self._node_size = _NODE_FROM_TIER[next_tier]
 
-        # ---- REBALANCE_NODE: proactive signal, no structural change ----
+        # ---- REBALANCE_NODE: proactive signal, triggers physics impact ----
         elif action_type == ActionType.REBALANCE_NODE:
-            # State unchanged; bonus computed in _calculate_reward()
-            pass
+            # Impact lasts for 5 steps (can be renewed)
+            self._rebalance_impact_remaining = 5
 
         # ---- MAINTAIN: explicit no-op ----
         elif action_type == ActionType.MAINTAIN:

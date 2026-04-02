@@ -1,23 +1,23 @@
 # validate_local.py
 """
-Pre-submission validation harness (spec §7 automated gates).
+Pre-submission validation harness (spec ?7 automated gates).
 
 Run locally before pushing to HF Space:
   python validate_local.py
 
 Validates pre-submission checklist:
-  ✓ Module imports (no syntax errors)
-  ✓ Environment variables using os.environ.get() (not hardcoded)
-  ✓ Graders return strictly [0.0, 1.0]
-  ✓ OpenAI Client usage (not Google Gemini)
-  ✓ All 3+ tasks with graders present
-  ✓ openenv.yaml OpenEnv spec compliant
-  ✓ inference.py in root directory
-  ✓ Dockerfile builds
-  ✓ No hardcoded API keys
-  ✓ Traces directory and files
+  [PASS] Module imports (no syntax errors)
+  [PASS] Environment variables using os.environ.get() (not hardcoded)
+  [PASS] Graders return strictly [0.0, 1.0]
+  [PASS] OpenAI Client usage (not Google Gemini)
+  [PASS] All 3+ tasks with graders present
+  [PASS] openenv.yaml OpenEnv spec compliant
+  [PASS] inference.py in root directory
+  ? Dockerfile builds
+  ? No hardcoded API keys
+  ? Traces directory and files
 
-Reference: PROJECT_SPEC.md §7 Pre-Submission Checklist
+Reference: PROJECT_SPEC.md ?7 Pre-Submission Checklist
 """
 
 import sys
@@ -36,10 +36,10 @@ def check_imports():
             TrajectoryStep, Trajectory, NodeSizeClass
         )
         from graders import ColdStartGrader, EfficientSqueezeGrader, EntropyStormGrader
-        print("  ✓ All modules import successfully")
+        print("  [PASS] All modules import successfully")
         return True
     except Exception as e:
-        print(f"  ✗ Import failed: {e}")
+        print(f"  [FAIL] Import failed: {e}")
         return False
 
 
@@ -48,7 +48,7 @@ def check_openenv_yaml():
     try:
         yaml_path = Path("openenv.yaml")
         if not yaml_path.exists():
-            print("  ✗ openenv.yaml not found")
+            print("  [FAIL] openenv.yaml not found")
             return False
             
         with open(yaml_path) as f:
@@ -81,19 +81,20 @@ def check_openenv_yaml():
         # Check for expected task names
         expected_tasks = {"cold_start", "efficient_squeeze", "entropy_storm"}
         if not task_names == expected_tasks:
-            print(f"  ⚠ Task names differ from expected: {task_names} vs {expected_tasks}")
+            print(f"  [WARN] Task names differ from expected: {task_names} vs {expected_tasks}")
         
-        print(f"  ✓ openenv.yaml valid ({spec['name']} v{spec['version']}, {len(spec['tasks'])} tasks)")
+        print(f"  [PASS] openenv.yaml valid ({spec['name']} v{spec['version']}, {len(spec['tasks'])} tasks)")
         return True
     except Exception as e:
-        print(f"  ✗ openenv.yaml validation failed: {e}")
+        print(f"  [FAIL] openenv.yaml validation failed: {e}")
         return False
 
 
 def check_graders():
-    """Validate all graders exist and can be instantiated (stubs)."""
+    """Validate all graders have been implemented and return [0.0, 1.0]."""
     try:
         from graders import ColdStartGrader, EfficientSqueezeGrader, EntropyStormGrader
+        from models import TrajectoryStep, Observation, ActionType, NodeSizeClass
         
         graders = [
             ColdStartGrader(),
@@ -101,23 +102,53 @@ def check_graders():
             EntropyStormGrader()
         ]
         
-        # At scaffolding stage, graders are stubs (pass bodies)
-        # We validate they:
-        # 1. Can be instantiated
-        # 2. Have grade() method
-        # 3. Will return floats when implemented
+        # 1. Test empty trajectory returns 0.0 (SDD Rule 1)
+        empty_traj = []
+        for grader in graders:
+            score = grader.grade(empty_traj)
+            if score != 0.0:
+                print(f"  [FAIL] {grader.__class__.__name__}: empty trajectory should return 0.0, got {score}")
+                return False
+        
+        # 2. Test healthy trajectory
+        dummy_obs = Observation(
+            cpu_usage_pct=45.0,
+            mem_usage_pct=50.0,
+            p99_latency_ms=180.0,
+            http_error_rate=0.0,
+            cpu_steal_pct=0.05,
+            active_replicas=3,
+            buffer_depth=5,
+            node_size_class=NodeSizeClass.MEDIUM,
+            current_hourly_cost=40.0,
+            node_bin_density=[0.4] * 10
+        )
+        dummy_step = TrajectoryStep(
+            observation=dummy_obs,
+            action=ActionType.MAINTAIN,
+            reward=1.0,
+            done=False,
+            uptime_metric=1.0,
+            cost_metric=0.4
+        )
+        healthy_traj = [dummy_step] * 5
         
         for grader in graders:
-            grader_name = grader.__class__.__name__
-            if not hasattr(grader, 'grade'):
-                print(f"  ✗ {grader_name} missing grade() method")
+            score = grader.grade(healthy_traj)
+            if not isinstance(score, float) or not (0.0 <= score <= 1.0):
+                print(f"  [FAIL] {grader.__class__.__name__}: score {score} out of range [0, 1]")
                 return False
             
-            print(f"  ✓ {grader_name}: instantiated (stub, grade() method ready)")
+            # EntropyStorm specifics
+            if isinstance(grader, EntropyStormGrader) and score != 1.0:
+                print(f"  [FAIL] {grader.__class__.__name__}: healthy traj (no violations) should return 1.0, got {score}")
+                return False
+
+            print(f"  [PASS] {grader.__class__.__name__}: score={score:.2f} (pass)")
         
         return True
     except Exception as e:
-        print(f"  ✗ Grader validation failed: {e}")
+        print(f"  [FAIL] Grader validation failed: {e}")
         return False
 
 
@@ -125,10 +156,10 @@ def check_inference_root():
     """Validate inference.py in root directory."""
     inference_path = Path("inference.py")
     if inference_path.exists():
-        print("  ✓ inference.py exists in root directory")
+        print("  [PASS] inference.py exists in root directory")
         return True
     else:
-        print("  ✗ inference.py not found in root directory")
+        print("  [FAIL] inference.py not found in root directory")
         return False
 
 
@@ -142,7 +173,7 @@ def check_env_structure():
         required_methods = ["reset", "step", "state", "_apply_action", "_calculate_reward"]
         for method in required_methods:
             if not hasattr(KubeCostEnv, method):
-                print(f"  ✗ KubeCostEnv missing method: {method}")
+                print(f"  [FAIL] KubeCostEnv missing method: {method}")
                 return False
         
         # Check method signatures
@@ -150,10 +181,10 @@ def check_env_structure():
         sig_step = inspect.signature(KubeCostEnv.step)
         sig_state = inspect.signature(KubeCostEnv.state)
         
-        print("  ✓ KubeCostEnv has all required methods")
+        print("  [PASS] KubeCostEnv has all required methods")
         return True
     except Exception as e:
-        print(f"  ✗ env.py structure validation failed: {e}")
+        print(f"  [FAIL] env.py structure validation failed: {e}")
         return False
 
 
@@ -163,7 +194,7 @@ def check_env_variable_patterns():
         # Read inference.py and check for hardcoded API keys
         inference_path = Path("inference.py")
         if not inference_path.exists():
-            print("  ✓ inference.py will be checked after creation")
+            print("  ? inference.py will be checked after creation")
             return True
         
         inference_code = inference_path.read_text()
@@ -177,18 +208,18 @@ def check_env_variable_patterns():
         
         for pattern in hardcoded_patterns:
             if re.search(pattern, inference_code):
-                print(f"  ⚠ Found potential hardcoded credential pattern: {pattern}")
+                print(f"  [WARN] Found potential hardcoded credential pattern: {pattern}")
                 # Not a hard failure, just warning
         
         # Check for os.environ.get() usage
         if "os.environ.get" in inference_code:
-            print("  ✓ Using os.environ.get() for environment variables")
+            print("  [PASS] Using os.environ.get() for environment variables")
             return True
         else:
-            print("  ⚠ Consider using os.environ.get() for all env var access")
+            print("  [WARN] Consider using os.environ.get() for all env var access")
             return True  # Not a hard failure
     except Exception as e:
-        print(f"  ✗ Environment variable check failed: {e}")
+        print(f"  [FAIL] Environment variable check failed: {e}")
         return False
 
 
@@ -197,20 +228,20 @@ def check_openai_client():
     try:
         inference_path = Path("inference.py")
         if not inference_path.exists():
-            print("  ⚠ inference.py not yet created")
+            print("  ? inference.py not yet created")
             return True
         
         code = inference_path.read_text()
         
         # Check for OpenAI import
         if "from openai import OpenAI" in code or "import openai" in code:
-            print("  ✓ Using OpenAI Client")
+            print("  [PASS] Using OpenAI Client")
             return True
         else:
-            print("  ⚠ OpenAI Client import not found (ensure using OpenAI not Google Gemini)")
+            print("  [WARN] OpenAI Client import not found (ensure using OpenAI not Google Gemini)")
             return True  # Not a hard failure at validation stage
     except Exception as e:
-        print(f"  ✗ OpenAI client check failed: {e}")
+        print(f"  [FAIL] OpenAI client check failed: {e}")
         return False
 
 
@@ -219,20 +250,20 @@ def check_grader_bounds():
     try:
         graders_path = Path("graders.py")
         if not graders_path.exists():
-            print("  ✓ graders.py will be checked after creation")
+            print("  ? graders.py will be checked after creation")
             return True
         
         code = graders_path.read_text()
         
         # Check for clamping pattern: max(0.0, min(1.0, ...))
         if "max(0.0, min(1.0," in code:
-            print("  ✓ Graders properly clamp scores to [0.0, 1.0]")
+            print("  [PASS] Graders properly clamp scores to [0.0, 1.0]")
             return True
         else:
-            print("  ⚠ Warning: Check that graders clamp scores to [0.0, 1.0]")
+            print("  [WARN] Warning: Check that graders clamp scores to [0.0, 1.0]")
             return True  # Not a hard failure
     except Exception as e:
-        print(f"  ✗ Grader bounds check failed: {e}")
+        print(f"  [FAIL] Grader bounds check failed: {e}")
         return False
 
 
@@ -241,7 +272,7 @@ def check_requirements_openai():
     try:
         req_path = Path("requirements.txt")
         if not req_path.exists():
-            print("  ⚠ requirements.txt not found")
+            print("  ? requirements.txt not found")
             return True
         
         content = req_path.read_text()
@@ -250,16 +281,16 @@ def check_requirements_openai():
         has_google = "google-generativeai" in content.lower()
         
         if has_openai and not has_google:
-            print("  ✓ requirements.txt uses OpenAI (not Google Gemini)")
+            print("  [PASS] requirements.txt uses OpenAI (not Google Gemini)")
             return True
         elif has_google:
-            print("  ✗ requirements.txt includes Google Gemini (should be OpenAI)")
+            print("  [FAIL] requirements.txt includes Google Gemini (should be OpenAI)")
             return False
         else:
-            print("  ⚠ OpenAI not found in requirements.txt")
+            print("  [WARN] OpenAI not found in requirements.txt")
             return True  # Not a hard failure
     except Exception as e:
-        print(f"  ✗ Requirements check failed: {e}")
+        print(f"  [FAIL] Requirements check failed: {e}")
         return False
 
 
@@ -268,25 +299,26 @@ def check_dockerfile_build():
     try:
         docker_path = Path("Dockerfile")
         if not docker_path.exists():
-            print("  ⚠ Dockerfile not found")
+            print("  ? Dockerfile not found")
             return True
         
         content = docker_path.read_text()
         
         # Check for inference.py verification
         if "inference.py" in content:
-            print("  ✓ Dockerfile includes inference.py verification")
+            print("  [PASS] Dockerfile includes inference.py verification")
             return True
         else:
-            print("  ⚠ Dockerfile may not verify inference.py location")
+            print("  [WARN] Dockerfile may not verify inference.py location")
             return True
     except Exception as e:
-        print(f"  ✗ Dockerfile check failed: {e}")
+        print(f"  [FAIL] Dockerfile check failed: {e}")
         return False
+def check_traces_directory():
     """Validate traces directory exists."""
     traces_dir = Path("traces")
     if not traces_dir.exists():
-        print("  ⚠ traces/ directory not created yet (will be needed for inference)")
+        print("  [WARN] traces/ directory not created yet (will be needed for inference)")
         return True  # Not a hard failure at scaffolding stage
     
     expected_traces = [
@@ -297,10 +329,10 @@ def check_dockerfile_build():
     
     missing = [f for f in expected_traces if not (traces_dir / f).exists()]
     if missing:
-        print(f"  ⚠ Missing trace files: {missing} (will be needed for inference)")
+        print(f"  [WARN] Missing trace files: {missing} (will be needed for inference)")
         return True  # Not a hard failure at scaffolding stage
     
-    print(f"  ✓ traces/ directory has all 3 trace files")
+    print(f"  [PASS] traces/ directory has all 3 trace files")
     return True
 
 
@@ -330,7 +362,7 @@ def main():
         try:
             results.append(check_fn())
         except Exception as e:
-            print(f"  ✗ Unexpected error: {e}")
+            print(f"  ? Unexpected error: {e}")
             results.append(False)
     
     print("\n" + "=" * 60)
@@ -338,9 +370,9 @@ def main():
     total = len(results)
     
     if all(results):
-        print(f"✓ All {total} validation checks PASSED")
+        print(f"[PASS] All {total} validation checks PASSED")
         print("=" * 60)
-        print("\n🎯 Pre-submission checklist complete!")
+        print("\n? Pre-submission checklist complete!")
         print("\nBefore submitting to HF Spaces, verify one last time:")
         print("  1. Environment variables: API_BASE_URL, MODEL_NAME, HF_TOKEN")
         print("  2. inference.py location: Root directory (not in subdirectory)")
@@ -351,7 +383,7 @@ def main():
         print("=" * 60)
         return 0
     else:
-        print(f"✗ {total - passed} of {total} checks FAILED")
+        print(f"[FAIL] {total - passed} of {total} checks FAILED")
         print("=" * 60)
         print("\nFix the above issues before submitting.")
         return 1
