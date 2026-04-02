@@ -128,8 +128,7 @@ def check_graders():
             action=ActionType.MAINTAIN,
             reward=1.0,
             done=False,
-            uptime_metric=1.0,
-            cost_metric=0.4
+            info={}
         )
         healthy_traj = [dummy_step] * 5
         
@@ -336,6 +335,64 @@ def check_traces_directory():
     return True
 
 
+def check_readme_frontmatter():
+    """Validate README.md has correct HuggingFace frontmatter (spec §5)."""
+    try:
+        readme_path = Path("README.md")
+        if not readme_path.exists():
+            print("  [FAIL] README.md not found")
+            return False
+        
+        # Read with encoding error handling
+        try:
+            content = readme_path.read_text(encoding='utf-8')
+        except UnicodeDecodeError:
+            # Fallback to latin-1 if utf-8 fails
+            content = readme_path.read_text(encoding='latin-1')
+        
+        # Check for YAML frontmatter
+        if not content.startswith("---"):
+            print("  [FAIL] README.md missing YAML frontmatter (must start with ---)")
+            return False
+        
+        # Extract frontmatter
+        lines = content.split("\n")
+        frontmatter_end = None
+        for i in range(1, len(lines)):
+            if lines[i].startswith("---"):
+                frontmatter_end = i
+                break
+        
+        if frontmatter_end is None:
+            print("  [FAIL] README.md frontmatter not closed (missing closing ---)")
+            return False
+        
+        frontmatter_text = "\n".join(lines[1:frontmatter_end])
+        
+        # Required fields per spec §5
+        checks = {
+            "hardware: cpu-basic": "hardware tag must be 'cpu-basic' (2 vCPU limit)",
+            "sdk: docker": "sdk must be 'docker'",
+            "openenv": "tags must include 'openenv'"
+        }
+        
+        for check_str, error_msg in checks.items():
+            if check_str not in frontmatter_text:
+                print(f"  [FAIL] {error_msg}: '{check_str}' not found in frontmatter")
+                return False
+        
+        # Check for incorrect hardware tag
+        if "hardware: cpu-upgrade" in frontmatter_text:
+            print("  [FAIL] hardware tag is 'cpu-upgrade' (exceeds 2 vCPU limit); must be 'cpu-basic'")
+            return False
+        
+        print("  [PASS] README.md frontmatter valid (hardware: cpu-basic, sdk: docker, tags: openenv)")
+        return True
+    except Exception as e:
+        print(f"  [FAIL] README.md frontmatter check failed: {e}")
+        return False
+
+
 def main():
     """Run all validation checks."""
     print("\n" + "=" * 60)
@@ -354,6 +411,7 @@ def main():
         ("Inference Root", check_inference_root),
         ("Dockerfile Build", check_dockerfile_build),
         ("Traces Directory", check_traces_directory),
+        ("README.md Frontmatter", check_readme_frontmatter),
     ]
     
     results = []

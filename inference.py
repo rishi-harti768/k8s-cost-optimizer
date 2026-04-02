@@ -18,7 +18,7 @@ import os
 import json
 import sys
 import logging
-from pathlib import Path
+from datetime import datetime
 from typing import List, Dict, Any
 from openai import OpenAI
 from env import KubeCostEnv
@@ -228,7 +228,6 @@ Respond with ONLY valid JSON (no markdown):
         """
         try:
             obs = env.reset()
-            trajectory_steps = []
             
             for step_num in range(max_steps):
                 # Get action from LLM
@@ -387,7 +386,7 @@ def main():
         results_file = "inference_results.json"
         with open(results_file, "w") as f:
             json.dump({
-                "timestamp": str(any),
+                "timestamp": datetime.now().isoformat(),
                 "results": results,
                 "average_score": total_score
             }, f, indent=2)
