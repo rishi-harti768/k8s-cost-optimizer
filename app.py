@@ -113,7 +113,7 @@ def run_single_task(task_name: str) -> Tuple[str, str, float]:
 **Score:** {score:.3f}
 **Status:** {'✓ PASS' if score > 0.5 else '✗ FAIL'}
 
-Agent executed {env.step_count} steps during evaluation.
+Agent executed {len(env._trajectory)} steps during evaluation.
 """
 
         success_msg = f"✓ Task '{task_name}' completed (score: {score:.3f})"
