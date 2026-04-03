@@ -22,12 +22,12 @@ RUN uv sync --locked
 # Copy application code
 COPY . .
 
-# Verify structure: all critical files must exist in root (spec §5)
+# Verify structure: all critical files must exist
 RUN test -f inference.py || (echo "ERROR: inference.py not found in root directory" && exit 1)
 RUN test -f env.py || (echo "ERROR: env.py not found in root directory" && exit 1)
 RUN test -f models.py || (echo "ERROR: models.py not found in root directory" && exit 1)
 RUN test -f graders.py || (echo "ERROR: graders.py not found in root directory" && exit 1)
-RUN test -f app.py || (echo "ERROR: app.py not found in root directory" && exit 1)
+RUN test -f server/app.py || (echo "ERROR: server/app.py not found in server directory" && exit 1)
 RUN test -f openenv.yaml || (echo "ERROR: openenv.yaml not found in root directory" && exit 1)
 
 # Verify trace files are present
@@ -39,6 +39,6 @@ RUN uv run python -c "import yaml; yaml.safe_load(open('openenv.yaml'))" || (ech
 # Expose port (HF Spaces standard)
 EXPOSE 7860
 
-# Default command: run Gradio web interface via uv
-# This keeps the container running indefinitely while serving the web UI
-CMD ["uv", "run", "python", "app.py"]
+# Default command: run OpenEnv REST API server via uv
+# Uses openenv-core's create_fastapi_app for automatic endpoint generation
+CMD ["uv", "run", "python", "server/app.py"]

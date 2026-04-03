@@ -18,7 +18,7 @@ A production-grade RL environment for learning proactive Kubernetes autoscaling 
 
 **Deadline:** 8 Apr 2026, 11:59 PM IST  
 **Target Score:** ≥27/30  
-**Framework:** OpenEnv · HuggingFace Spaces · Python 3.10+
+**Framework:** OpenEnv · openenv-core FastAPI · HuggingFace Spaces · Python 3.10+
 
 ---
 
@@ -31,7 +31,7 @@ A production-grade RL environment for learning proactive Kubernetes autoscaling 
 - [ ] Set `HF_TOKEN` secret (your LLM API key)
 - [ ] Optionally set `API_BASE_URL` and `MODEL_NAME` if using non-default LLM
 - [ ] Push this repository to your Space
-- [ ] Access the Gradio UI at `https://<username>-kubecost-gym.hf.space`
+- [ ] Access the REST API at `https://<username>-kubecost-gym.hf.space` (with `/docs` for interactive Swagger UI)
 
 ---
 
@@ -536,6 +536,9 @@ k8s-cost-optimizer/
 ├── env.py                    ← KubeCostEnv (OpenEnv interface)
 ├── graders.py                ← Three task graders
 ├── inference.py              ← Gemini LLM agent (in root)
+│
+├── server/
+│   └── app.py                ← FastAPI REST server (openenv-core)
 │
 ├── pyproject.toml            ← Project metadata and dependencies
 ├── uv.lock                   ← Locked dependency versions (universal)
