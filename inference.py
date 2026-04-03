@@ -284,6 +284,15 @@ Respond with ONLY valid JSON (no markdown):
                 timeout=_CONFIG.LLM_TIMEOUT_SEC,
             )
 
+            # Log raw API response for debugging
+            logger.debug(f"[API Response] status: {response.model_dump() if hasattr(response, 'model_dump') else response}")
+            logger.debug(f"[Choices] count={len(response.choices) if response.choices else 0}")
+            if response.choices and len(response.choices) > 0:
+                choice = response.choices[0]
+                logger.debug(f"[Choice 0] message={choice.message}, finish_reason={choice.finish_reason}")
+                if choice.message:
+                    logger.debug(f"[Message] role={choice.message.role}, content={repr(choice.message.content)}")
+
             # Validate response structure
             if not response.choices or len(response.choices) == 0:
                 raise ValueError("API returned no choices in response")
@@ -294,9 +303,11 @@ Respond with ONLY valid JSON (no markdown):
             # Parse response (handle markdown code blocks)
             response_content = response.choices[0].message.content
             if response_content is None:
+                logger.error(f"[ERROR] API returned None content. Full response: {response.model_dump() if hasattr(response, 'model_dump') else response}")
                 raise ValueError("LLM returned empty response (content is None)")
             
             response_text = response_content.strip()
+            logger.debug(f"[Response Text] {response_text[:500]}")
 
             # Extract JSON (handle markdown code blocks)
             if "```" in response_text:
@@ -331,7 +342,12 @@ Respond with ONLY valid JSON (no markdown):
         except Exception as e:
             logger.warning(f"LLM response parsing failed ({e}), defaulting to MAINTAIN")
             if "response_text" in locals():
-                logger.debug(f"Response was: {response_text[:200]}")
+                logger.debug(f"Response text: {response_text[:300]}")
+            if "response" in locals():
+                try:
+                    logger.debug(f"Full API response dump: {response.model_dump() if hasattr(response, 'model_dump') else str(response)}")
+                except Exception as dump_err:
+                    logger.debug(f"Could not dump response: {dump_err}")
             return Action(action_type=ActionType.MAINTAIN)
 
     def run_episode(
@@ -482,9 +498,9 @@ def main() -> int:
     Returns:
         int: Exit code (0 for success, 1 for failure)
     """
-    # Setup logging
+    # Setup logging (DEBUG level to capture detailed response logs)
     logging.basicConfig(
-        level=logging.INFO,
+        level=logging.DEBUG,
         format="%(levelname)s: %(message)s",
         handlers=[
             logging.StreamHandler(sys.stdout),
