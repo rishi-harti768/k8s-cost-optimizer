@@ -486,9 +486,9 @@ User Input → Gradio Interface → Agent.decide()
 
 
 def main():
-    """Main entry point. Launch FastAPI with Gradio UI and REST API endpoints."""
+    """Main entry point. Launch Gradio interface."""
     logger.info("=" * 70)
-    logger.info("KubeCost-Gym Application Starting (Gradio + FastAPI REST API)")
+    logger.info("KubeCost-Gym Application Starting")
     logger.info("=" * 70)
 
     # Initialize agent
@@ -497,34 +497,26 @@ def main():
         logger.warning(f"Agent initialization warning: {msg}")
         # Continue anyway - agent will be initialized on first use if env vars set
 
-    # Create FastAPI app with REST endpoints
-    app = create_fastapi_app()
-
-    # Create Gradio interface and mount to FastAPI
+    # Create Gradio interface
+    logger.info("Creating Gradio interface...")
     interface = create_interface()
-    from gradio.mount import mount_gradio_app
-    app = mount_gradio_app(app, interface, path="/")
 
     # Get port and host from environment
     port = int(os.environ.get("PORT", 7860))
     host = os.environ.get("SERVER_NAME", "0.0.0.0")
 
-    logger.info(f"Launching Gradio + FastAPI REST API on {host}:{port}")
-    logger.info("  - Gradio UI: http://localhost:7860 (main interface)")
-    logger.info("  - REST API Docs: http://localhost:7860/docs (Swagger UI)")
-    logger.info("  - REST Endpoints:")
-    logger.info("      POST /reset  - Reset environment to initial state")
-    logger.info("      POST /step   - Execute action and get next step")
-    logger.info("      GET  /state  - Get current environment state")
-    logger.info("      GET  /health - Health check")
+    logger.info(f"✓ Launching Gradio UI on {host}:{port}")
+    logger.info("  - Main UI: http://localhost:7860")
+    logger.info("  - Includes: Task execution, results display, system info")
 
-    # Launch using uvicorn
-    import uvicorn
-    uvicorn.run(
-        app,
-        host=host,
-        port=port,
-        log_level="info",
+    # Launch Gradio interface
+    # In HF Spaces, this is the primary interface
+    interface.launch(
+        server_name=host,
+        server_port=port,
+        share=False,
+        show_error=True,
+        quiet=False,
     )
 
 
