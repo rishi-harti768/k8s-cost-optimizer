@@ -11,6 +11,9 @@ openai>=1.3.0
 # Serialization & configuration
 PyYAML>=6.0
 
+# Web UI - Gradio for HuggingFace Spaces integration
+gradio>=4.0.0
+
 # Development & testing
 pytest>=7.0.0
 pytest-cov>=4.0.0

@@ -23,5 +23,6 @@ RUN test -f inference.py || (echo "ERROR: inference.py not found in root directo
 # Expose port (HF Spaces standard)
 EXPOSE 7860
 
-# Default command: run inference pipeline
-CMD ["python", "inference.py"]
+# Default command: run Gradio web interface (persistent, long-running)
+# This keeps the container running indefinitely while serving the web UI
+CMD ["python", "app.py"]
