@@ -53,7 +53,7 @@ class _InferenceConfig:
 
     # Environment variables
     API_BASE_URL_DEFAULT: str = "https://router.huggingface.co/v1"
-    MODEL_NAME_DEFAULT: str = "openai/gpt-oss-120b:groq"
+    MODEL_NAME_DEFAULT: str = "MiniMaxAI/MiniMax-M2.5:novita"
 
     REQUIRED_ENV_VARS: List[str] = ["API_BASE_URL", "MODEL_NAME"]
     REQUIRED_TOKEN_VARS: List[str] = ["HF_TOKEN"]  # HF_TOKEN mandatory for submission
