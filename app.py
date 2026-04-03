@@ -206,10 +206,6 @@ def create_interface() -> gr.Blocks:
 
     with gr.Blocks(
         title="KubeCost-Gym: K8s Cost Optimization Agent",
-        theme=gr.themes.Soft(
-            primary_hue="blue",
-            secondary_hue="purple",
-        ),
     ) as interface:
 
         # Header
@@ -373,7 +369,10 @@ def main():
         server_port=port,
         share=False,
         show_error=True,
-        show_api=False,
+        theme=gr.themes.Soft(
+            primary_hue="blue",
+            secondary_hue="purple",
+        ),
     )
 
 
