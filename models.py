@@ -10,9 +10,22 @@ All fields include:
 Reference: PROJECT_SPEC.md §3 Phase 2 Contract Specification
 """
 
-from pydantic import BaseModel, Field, conlist, confloat
 from enum import Enum
 from typing import List
+
+from pydantic import BaseModel, Field, confloat, conlist
+
+__all__ = [
+    "NodeSizeClass",
+    "ActionType",
+    "Observation",
+    "Action",
+    "EnvState",
+    "TrajectoryStep",
+    "Trajectory",
+    "TraceStep",
+    "TraceData",
+]
 
 
 # ===== ENUMS (Finite value sets) =====
@@ -93,8 +106,8 @@ class Observation(BaseModel):
     )
 
     class Config:
-        """Allow string enum values in JSON."""
-        use_enum_values = False
+        """Use enum values (not names) in JSON serialization."""
+        use_enum_values = True
 
 
 # ===== ACTIONS (Agent decisions) =====
@@ -133,8 +146,8 @@ class EnvState(BaseModel):
     )
 
     class Config:
-        """Allow string enum values."""
-        use_enum_values = False
+        """Use enum values in JSON serialization."""
+        use_enum_values = True
 
 
 # ===== TRAJECTORY (For grading) =====
@@ -143,6 +156,8 @@ class TrajectoryStep(BaseModel):
     """Single step in episode trajectory (for graders).
     
     Reference: PROJECT_SPEC.md §4 Grader Specification
+    
+    Note: Remove redundant metrics (uptime_metric, cost_metric) — graders compute these from observation.
     """
     
     observation: Observation
@@ -153,20 +168,10 @@ class TrajectoryStep(BaseModel):
         default_factory=dict,
         description="Metadata dict"
     )
-    
-    # Task-specific metrics for grading
-    uptime_metric: float = Field(
-        ge=0, le=1,
-        description="SLA adherence [0-1]; 1.0 = p99 < 300ms"
-    )
-    cost_metric: float = Field(
-        ge=0,
-        description="Cost relative to budget [0-∞]"
-    )
 
     class Config:
-        """Allow enum values."""
-        use_enum_values = False
+        """Use enum values in JSON serialization."""
+        use_enum_values = True
 
 
 class Trajectory(BaseModel):
@@ -177,4 +182,35 @@ class Trajectory(BaseModel):
     steps: List[TrajectoryStep] = Field(
         min_length=0,
         description="List of trajectory steps"
+    )
+
+
+# ===== TRACE DATA (For loading from JSON files) =====
+
+class TraceStep(BaseModel):
+    """Single step record from a deterministic trace JSON file.
+    
+    Reference: PROJECT_SPEC.md §3 Phase 1 Determinism Guarantee
+    """
+    step: int = Field(description="Step index in trace")
+    observation: Observation = Field(description="Observation at this step")
+    dynamics: dict = Field(
+        default_factory=dict,
+        description="Optional dynamics metadata (reason, etc.)"
+    )
+
+
+class TraceData(BaseModel):
+    """Full deterministic trace loaded from JSON file.
+    
+    Pydantic automatically validates all nested Observation fields, step numbers,
+    and ensures the trace structure is well-formed.
+    
+    Reference: PROJECT_SPEC.md §3 Phase 1 Determinism Guarantee
+    """
+    task_name: str = Field(description="Task identifier")
+    task_difficulty: str = Field(description="Task difficulty (easy|medium|hard)")
+    steps: List[TraceStep] = Field(
+        min_length=1,
+        description="Non-empty list of trace steps"
     )

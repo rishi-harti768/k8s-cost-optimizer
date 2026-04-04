@@ -1,0 +1,315 @@
+{
+    "task_name": "efficient_squeeze",
+    "task_difficulty": "medium",
+    "description": "Cost-optimized squeeze - minimize replicas while maintaining steal control",
+    "steps": [
+        {
+            "step": 0,
+            "observation": {
+                "cpu_usage_pct": 30.0,
+                "mem_usage_pct": 35.0,
+                "p99_latency_ms": 180.0,
+                "http_error_rate": 0.008,
+                "cpu_steal_pct": 0.13,
+                "active_replicas": 2,
+                "buffer_depth": 650,
+                "node_size_class": "M",
+                "current_hourly_cost": 20.0,
+                "node_bin_density": [
+                    0.30,
+                    0.29,
+                    0.31,
+                    0.30,
+                    0.29,
+                    0.30,
+                    0.31,
+                    0.29,
+                    0.30,
+                    0.30
+                ]
+            },
+            "action": "MAINTAIN",
+            "dynamics": {}
+        },
+        {
+            "step": 1,
+            "observation": {
+                "cpu_usage_pct": 38.0,
+                "mem_usage_pct": 43.0,
+                "p99_latency_ms": 210.0,
+                "http_error_rate": 0.006,
+                "cpu_steal_pct": 0.18,
+                "active_replicas": 2,
+                "buffer_depth": 720,
+                "node_size_class": "M",
+                "current_hourly_cost": 20.0,
+                "node_bin_density": [
+                    0.38,
+                    0.37,
+                    0.39,
+                    0.38,
+                    0.37,
+                    0.38,
+                    0.39,
+                    0.37,
+                    0.38,
+                    0.38
+                ]
+            },
+            "action": "REBALANCE_NODE",
+            "dynamics": {}
+        },
+        {
+            "step": 2,
+            "observation": {
+                "cpu_usage_pct": 32.0,
+                "mem_usage_pct": 37.0,
+                "p99_latency_ms": 185.0,
+                "http_error_rate": 0.007,
+                "cpu_steal_pct": 0.14,
+                "active_replicas": 2,
+                "buffer_depth": 680,
+                "node_size_class": "M",
+                "current_hourly_cost": 20.0,
+                "node_bin_density": [
+                    0.32,
+                    0.31,
+                    0.33,
+                    0.32,
+                    0.31,
+                    0.32,
+                    0.33,
+                    0.31,
+                    0.32,
+                    0.32
+                ]
+            },
+            "action": "MAINTAIN",
+            "dynamics": {}
+        },
+        {
+            "step": 3,
+            "observation": {
+                "cpu_usage_pct": 28.0,
+                "mem_usage_pct": 33.0,
+                "p99_latency_ms": 160.0,
+                "http_error_rate": 0.010,
+                "cpu_steal_pct": 0.10,
+                "active_replicas": 2,
+                "buffer_depth": 640,
+                "node_size_class": "M",
+                "current_hourly_cost": 20.0,
+                "node_bin_density": [
+                    0.28,
+                    0.27,
+                    0.29,
+                    0.28,
+                    0.27,
+                    0.28,
+                    0.29,
+                    0.27,
+                    0.28,
+                    0.28
+                ]
+            },
+            "action": "MAINTAIN",
+            "dynamics": {}
+        },
+        {
+            "step": 4,
+            "observation": {
+                "cpu_usage_pct": 35.0,
+                "mem_usage_pct": 40.0,
+                "p99_latency_ms": 200.0,
+                "http_error_rate": 0.006,
+                "cpu_steal_pct": 0.16,
+                "active_replicas": 2,
+                "buffer_depth": 700,
+                "node_size_class": "M",
+                "current_hourly_cost": 20.0,
+                "node_bin_density": [
+                    0.35,
+                    0.34,
+                    0.36,
+                    0.35,
+                    0.34,
+                    0.35,
+                    0.36,
+                    0.34,
+                    0.35,
+                    0.35
+                ]
+            },
+            "action": "MAINTAIN",
+            "dynamics": {}
+        },
+        {
+            "step": 5,
+            "observation": {
+                "cpu_usage_pct": 31.0,
+                "mem_usage_pct": 36.0,
+                "p99_latency_ms": 180.0,
+                "http_error_rate": 0.008,
+                "cpu_steal_pct": 0.13,
+                "active_replicas": 2,
+                "buffer_depth": 670,
+                "node_size_class": "M",
+                "current_hourly_cost": 20.0,
+                "node_bin_density": [
+                    0.31,
+                    0.30,
+                    0.32,
+                    0.31,
+                    0.30,
+                    0.31,
+                    0.32,
+                    0.30,
+                    0.31,
+                    0.31
+                ]
+            },
+            "action": "MAINTAIN",
+            "dynamics": {}
+        },
+        {
+            "step": 6,
+            "observation": {
+                "cpu_usage_pct": 27.0,
+                "mem_usage_pct": 32.0,
+                "p99_latency_ms": 160.0,
+                "http_error_rate": 0.010,
+                "cpu_steal_pct": 0.09,
+                "active_replicas": 2,
+                "buffer_depth": 640,
+                "node_size_class": "M",
+                "current_hourly_cost": 20.0,
+                "node_bin_density": [
+                    0.27,
+                    0.26,
+                    0.28,
+                    0.27,
+                    0.26,
+                    0.27,
+                    0.28,
+                    0.26,
+                    0.27,
+                    0.27
+                ]
+            },
+            "action": "MAINTAIN",
+            "dynamics": {}
+        },
+        {
+            "step": 7,
+            "observation": {
+                "cpu_usage_pct": 32.0,
+                "mem_usage_pct": 37.0,
+                "p99_latency_ms": 185.0,
+                "http_error_rate": 0.008,
+                "cpu_steal_pct": 0.12,
+                "active_replicas": 2,
+                "buffer_depth": 680,
+                "node_size_class": "M",
+                "current_hourly_cost": 20.0,
+                "node_bin_density": [
+                    0.32,
+                    0.31,
+                    0.33,
+                    0.32,
+                    0.31,
+                    0.32,
+                    0.33,
+                    0.31,
+                    0.32,
+                    0.32
+                ]
+            },
+            "action": "MAINTAIN",
+            "dynamics": {}
+        },
+        {
+            "step": 8,
+            "observation": {
+                "cpu_usage_pct": 29.0,
+                "mem_usage_pct": 34.0,
+                "p99_latency_ms": 170.0,
+                "http_error_rate": 0.009,
+                "cpu_steal_pct": 0.11,
+                "active_replicas": 2,
+                "buffer_depth": 660,
+                "node_size_class": "M",
+                "current_hourly_cost": 20.0,
+                "node_bin_density": [
+                    0.29,
+                    0.28,
+                    0.30,
+                    0.29,
+                    0.28,
+                    0.29,
+                    0.30,
+                    0.28,
+                    0.29,
+                    0.29
+                ]
+            },
+            "action": "MAINTAIN",
+            "dynamics": {}
+        },
+        {
+            "step": 9,
+            "observation": {
+                "cpu_usage_pct": 25.0,
+                "mem_usage_pct": 30.0,
+                "p99_latency_ms": 150.0,
+                "http_error_rate": 0.011,
+                "cpu_steal_pct": 0.08,
+                "active_replicas": 2,
+                "buffer_depth": 620,
+                "node_size_class": "M",
+                "current_hourly_cost": 20.0,
+                "node_bin_density": [
+                    0.25,
+                    0.24,
+                    0.26,
+                    0.25,
+                    0.24,
+                    0.25,
+                    0.26,
+                    0.24,
+                    0.25,
+                    0.25
+                ]
+            },
+            "action": "MAINTAIN",
+            "dynamics": {}
+        },
+        {
+            "step": 10,
+            "observation": {
+                "cpu_usage_pct": 30.0,
+                "mem_usage_pct": 35.0,
+                "p99_latency_ms": 175.0,
+                "http_error_rate": 0.009,
+                "cpu_steal_pct": 0.12,
+                "active_replicas": 2,
+                "buffer_depth": 650,
+                "node_size_class": "M",
+                "current_hourly_cost": 20.0,
+                "node_bin_density": [
+                    0.30,
+                    0.29,
+                    0.31,
+                    0.30,
+                    0.29,
+                    0.30,
+                    0.31,
+                    0.29,
+                    0.30,
+                    0.30
+                ]
+            },
+            "action": "MAINTAIN",
+            "dynamics": {}
+        }
+    ]
+}

@@ -1,0 +1,28 @@
+[project]
+name = "k8s-cost-optimizer"
+version = "0.1.0"
+description = "A production-grade RL environment for learning proactive Kubernetes autoscaling strategies using LLMs. Implements the OpenEnv standard with strict Pydantic type validation, deterministic trace-based dynamics, and three progressive difficulty tasks."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.135.3",
+    "gradio>=6.11.0",
+    "openai>=2.30.0",
+    "openenv-core[core]>=0.2.2",
+    "pydantic>=2.12.5",
+    "pyyaml>=6.0.3",
+    "uvicorn>=0.42.0",
+]
+
+[project.scripts]
+# Application entry point - enables running via: uv run kubecost-gym
+# or: python -m server.app
+kubecost-gym = "server.app:main"
+
+[dependency-groups]
+dev = [
+    "black>=26.3.1",
+    "mypy>=1.20.0",
+    "pytest>=9.0.2",
+    "pytest-cov>=7.1.0",
+]
