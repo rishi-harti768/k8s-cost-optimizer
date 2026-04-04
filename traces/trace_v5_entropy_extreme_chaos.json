@@ -1,323 +1,1457 @@
 {
     "task_name": "entropy_storm",
     "task_difficulty": "hard",
-    "description": "Extreme chaos - multiple simultaneous steal spikes",
+    "description": "Programmatic entropy_storm trace with 50 steps (Sinusoidal CPU model).",
     "steps": [
         {
             "step": 0,
             "observation": {
-                "cpu_usage_pct": 30.0,
-                "mem_usage_pct": 35.0,
-                "p99_latency_ms": 180.0,
-                "http_error_rate": 0.007,
-                "cpu_steal_pct": 0.10,
-                "active_replicas": 5,
-                "buffer_depth": 650,
-                "node_size_class": "L",
-                "current_hourly_cost": 50.0,
+                "cpu_usage_pct": 40.0,
+                "mem_usage_pct": 57.19,
+                "p99_latency_ms": 150.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.01,
+                "active_replicas": 10,
+                "buffer_depth": 100,
+                "node_size_class": "M",
+                "current_hourly_cost": 10.0,
                 "node_bin_density": [
-                    0.30,
-                    0.29,
-                    0.31,
-                    0.30,
-                    0.29,
-                    0.30,
-                    0.31,
-                    0.29,
-                    0.30,
-                    0.30
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
                 ]
             },
-            "action": "REBALANCE_NODE",
-            "dynamics": {}
+            "dynamics": {
+                "reason": "sinusoidal_load_model"
+            }
         },
         {
             "step": 1,
             "observation": {
-                "cpu_usage_pct": 55.0,
-                "mem_usage_pct": 60.0,
-                "p99_latency_ms": 290.0,
-                "http_error_rate": 0.012,
-                "cpu_steal_pct": 0.35,
-                "active_replicas": 5,
-                "buffer_depth": 820,
-                "node_size_class": "L",
-                "current_hourly_cost": 50.0,
+                "cpu_usage_pct": 49.27,
+                "mem_usage_pct": 60.91,
+                "p99_latency_ms": 152.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.01,
+                "active_replicas": 10,
+                "buffer_depth": 110,
+                "node_size_class": "M",
+                "current_hourly_cost": 10.0,
                 "node_bin_density": [
-                    0.55,
-                    0.54,
-                    0.56,
-                    0.55,
-                    0.54,
-                    0.55,
-                    0.56,
-                    0.54,
-                    0.55,
-                    0.55
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
                 ]
             },
-            "action": "REBALANCE_NODE",
-            "dynamics": {}
+            "dynamics": {
+                "reason": "sinusoidal_load_model"
+            }
         },
         {
             "step": 2,
             "observation": {
-                "cpu_usage_pct": 68.0,
-                "mem_usage_pct": 72.0,
-                "p99_latency_ms": 380.0,
-                "http_error_rate": 0.028,
-                "cpu_steal_pct": 0.48,
-                "active_replicas": 5,
-                "buffer_depth": 950,
-                "node_size_class": "L",
-                "current_hourly_cost": 50.0,
+                "cpu_usage_pct": 57.63,
+                "mem_usage_pct": 63.56,
+                "p99_latency_ms": 154.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.01,
+                "active_replicas": 10,
+                "buffer_depth": 120,
+                "node_size_class": "M",
+                "current_hourly_cost": 10.0,
                 "node_bin_density": [
-                    0.68,
-                    0.67,
-                    0.69,
-                    0.68,
-                    0.67,
-                    0.68,
-                    0.69,
-                    0.67,
-                    0.68,
-                    0.68
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
                 ]
             },
-            "action": "SCALE_REPLICAS",
             "dynamics": {
-                "action_params": {
-                    "replicas_delta": 5
-                }
+                "reason": "sinusoidal_load_model"
             }
         },
         {
             "step": 3,
             "observation": {
-                "cpu_usage_pct": 52.0,
-                "mem_usage_pct": 56.0,
-                "p99_latency_ms": 270.0,
-                "http_error_rate": 0.015,
-                "cpu_steal_pct": 0.32,
+                "cpu_usage_pct": 64.27,
+                "mem_usage_pct": 64.88,
+                "p99_latency_ms": 156.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.01,
                 "active_replicas": 10,
-                "buffer_depth": 780,
-                "node_size_class": "L",
-                "current_hourly_cost": 75.0,
+                "buffer_depth": 130,
+                "node_size_class": "M",
+                "current_hourly_cost": 10.0,
                 "node_bin_density": [
-                    0.52,
-                    0.51,
-                    0.53,
-                    0.52,
-                    0.51,
-                    0.52,
-                    0.53,
-                    0.51,
-                    0.52,
-                    0.52
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
                 ]
             },
-            "action": "MAINTAIN",
-            "dynamics": {}
+            "dynamics": {
+                "reason": "sinusoidal_load_model"
+            }
         },
         {
             "step": 4,
             "observation": {
-                "cpu_usage_pct": 71.0,
-                "mem_usage_pct": 75.0,
-                "p99_latency_ms": 390.0,
-                "http_error_rate": 0.033,
-                "cpu_steal_pct": 0.51,
+                "cpu_usage_pct": 68.53,
+                "mem_usage_pct": 64.74,
+                "p99_latency_ms": 158.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.01,
                 "active_replicas": 10,
-                "buffer_depth": 920,
-                "node_size_class": "L",
-                "current_hourly_cost": 75.0,
+                "buffer_depth": 140,
+                "node_size_class": "M",
+                "current_hourly_cost": 10.0,
                 "node_bin_density": [
-                    0.71,
-                    0.70,
-                    0.72,
-                    0.71,
-                    0.70,
-                    0.71,
-                    0.72,
-                    0.70,
-                    0.71,
-                    0.71
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
                 ]
             },
-            "action": "REBALANCE_NODE",
-            "dynamics": {}
+            "dynamics": {
+                "reason": "sinusoidal_load_model"
+            }
         },
         {
             "step": 5,
             "observation": {
-                "cpu_usage_pct": 65.0,
-                "mem_usage_pct": 69.0,
-                "p99_latency_ms": 350.0,
-                "http_error_rate": 0.025,
-                "cpu_steal_pct": 0.43,
+                "cpu_usage_pct": 70.0,
+                "mem_usage_pct": 63.16,
+                "p99_latency_ms": 160.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.25,
                 "active_replicas": 10,
-                "buffer_depth": 880,
-                "node_size_class": "L",
-                "current_hourly_cost": 75.0,
+                "buffer_depth": 150,
+                "node_size_class": "M",
+                "current_hourly_cost": 10.0,
                 "node_bin_density": [
-                    0.65,
-                    0.64,
-                    0.66,
-                    0.65,
-                    0.64,
-                    0.65,
-                    0.66,
-                    0.64,
-                    0.65,
-                    0.65
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
                 ]
             },
-            "action": "MAINTAIN",
-            "dynamics": {}
+            "dynamics": {
+                "reason": "sinusoidal_load_model"
+            }
         },
         {
             "step": 6,
             "observation": {
-                "cpu_usage_pct": 58.0,
-                "mem_usage_pct": 62.0,
-                "p99_latency_ms": 310.0,
-                "http_error_rate": 0.018,
-                "cpu_steal_pct": 0.36,
+                "cpu_usage_pct": 68.53,
+                "mem_usage_pct": 60.3,
+                "p99_latency_ms": 162.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.25,
                 "active_replicas": 10,
-                "buffer_depth": 820,
-                "node_size_class": "L",
-                "current_hourly_cost": 75.0,
+                "buffer_depth": 160,
+                "node_size_class": "M",
+                "current_hourly_cost": 10.0,
                 "node_bin_density": [
-                    0.58,
-                    0.57,
-                    0.59,
-                    0.58,
-                    0.57,
-                    0.58,
-                    0.59,
-                    0.57,
-                    0.58,
-                    0.58
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
                 ]
             },
-            "action": "MAINTAIN",
-            "dynamics": {}
+            "dynamics": {
+                "reason": "sinusoidal_load_model"
+            }
         },
         {
             "step": 7,
             "observation": {
-                "cpu_usage_pct": 45.0,
-                "mem_usage_pct": 50.0,
-                "p99_latency_ms": 240.0,
-                "http_error_rate": 0.009,
-                "cpu_steal_pct": 0.24,
+                "cpu_usage_pct": 64.27,
+                "mem_usage_pct": 56.42,
+                "p99_latency_ms": 164.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.25,
                 "active_replicas": 10,
-                "buffer_depth": 720,
-                "node_size_class": "L",
-                "current_hourly_cost": 75.0,
+                "buffer_depth": 170,
+                "node_size_class": "M",
+                "current_hourly_cost": 10.0,
                 "node_bin_density": [
-                    0.45,
-                    0.44,
-                    0.46,
-                    0.45,
-                    0.44,
-                    0.45,
-                    0.46,
-                    0.44,
-                    0.45,
-                    0.45
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
                 ]
             },
-            "action": "SCALE_REPLICAS",
             "dynamics": {
-                "action_params": {
-                    "replicas_delta": -5
-                }
+                "reason": "sinusoidal_load_model"
             }
         },
         {
             "step": 8,
             "observation": {
-                "cpu_usage_pct": 38.0,
-                "mem_usage_pct": 42.0,
-                "p99_latency_ms": 200.0,
-                "http_error_rate": 0.006,
-                "cpu_steal_pct": 0.16,
-                "active_replicas": 5,
-                "buffer_depth": 650,
-                "node_size_class": "L",
-                "current_hourly_cost": 50.0,
+                "cpu_usage_pct": 57.63,
+                "mem_usage_pct": 51.92,
+                "p99_latency_ms": 166.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.01,
+                "active_replicas": 10,
+                "buffer_depth": 180,
+                "node_size_class": "M",
+                "current_hourly_cost": 10.0,
                 "node_bin_density": [
-                    0.38,
-                    0.37,
-                    0.39,
-                    0.38,
-                    0.37,
-                    0.38,
-                    0.39,
-                    0.37,
-                    0.38,
-                    0.38
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
                 ]
             },
-            "action": "MAINTAIN",
-            "dynamics": {}
+            "dynamics": {
+                "reason": "sinusoidal_load_model"
+            }
         },
         {
             "step": 9,
             "observation": {
-                "cpu_usage_pct": 32.0,
-                "mem_usage_pct": 37.0,
-                "p99_latency_ms": 170.0,
-                "http_error_rate": 0.008,
-                "cpu_steal_pct": 0.11,
-                "active_replicas": 5,
-                "buffer_depth": 600,
-                "node_size_class": "L",
-                "current_hourly_cost": 50.0,
+                "cpu_usage_pct": 49.27,
+                "mem_usage_pct": 47.23,
+                "p99_latency_ms": 168.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.01,
+                "active_replicas": 10,
+                "buffer_depth": 190,
+                "node_size_class": "M",
+                "current_hourly_cost": 10.0,
                 "node_bin_density": [
-                    0.32,
-                    0.31,
-                    0.33,
-                    0.32,
-                    0.31,
-                    0.32,
-                    0.33,
-                    0.31,
-                    0.32,
-                    0.32
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
                 ]
             },
-            "action": "MAINTAIN",
-            "dynamics": {}
+            "dynamics": {
+                "reason": "sinusoidal_load_model"
+            }
         },
         {
             "step": 10,
             "observation": {
-                "cpu_usage_pct": 28.0,
-                "mem_usage_pct": 33.0,
-                "p99_latency_ms": 150.0,
-                "http_error_rate": 0.010,
-                "cpu_steal_pct": 0.09,
-                "active_replicas": 5,
-                "buffer_depth": 580,
-                "node_size_class": "L",
-                "current_hourly_cost": 50.0,
+                "cpu_usage_pct": 40.0,
+                "mem_usage_pct": 42.81,
+                "p99_latency_ms": 170.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.01,
+                "active_replicas": 10,
+                "buffer_depth": 200,
+                "node_size_class": "M",
+                "current_hourly_cost": 10.0,
                 "node_bin_density": [
-                    0.28,
-                    0.27,
-                    0.29,
-                    0.28,
-                    0.27,
-                    0.28,
-                    0.29,
-                    0.27,
-                    0.28,
-                    0.28
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
                 ]
             },
-            "action": "MAINTAIN",
-            "dynamics": {}
+            "dynamics": {
+                "reason": "sinusoidal_load_model"
+            }
+        },
+        {
+            "step": 11,
+            "observation": {
+                "cpu_usage_pct": 30.73,
+                "mem_usage_pct": 39.09,
+                "p99_latency_ms": 172.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.01,
+                "active_replicas": 10,
+                "buffer_depth": 210,
+                "node_size_class": "M",
+                "current_hourly_cost": 10.0,
+                "node_bin_density": [
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
+                ]
+            },
+            "dynamics": {
+                "reason": "sinusoidal_load_model"
+            }
+        },
+        {
+            "step": 12,
+            "observation": {
+                "cpu_usage_pct": 22.37,
+                "mem_usage_pct": 36.44,
+                "p99_latency_ms": 174.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.01,
+                "active_replicas": 10,
+                "buffer_depth": 220,
+                "node_size_class": "M",
+                "current_hourly_cost": 10.0,
+                "node_bin_density": [
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
+                ]
+            },
+            "dynamics": {
+                "reason": "sinusoidal_load_model"
+            }
+        },
+        {
+            "step": 13,
+            "observation": {
+                "cpu_usage_pct": 15.73,
+                "mem_usage_pct": 35.12,
+                "p99_latency_ms": 176.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.01,
+                "active_replicas": 10,
+                "buffer_depth": 230,
+                "node_size_class": "M",
+                "current_hourly_cost": 10.0,
+                "node_bin_density": [
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
+                ]
+            },
+            "dynamics": {
+                "reason": "sinusoidal_load_model"
+            }
+        },
+        {
+            "step": 14,
+            "observation": {
+                "cpu_usage_pct": 11.47,
+                "mem_usage_pct": 35.26,
+                "p99_latency_ms": 178.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.01,
+                "active_replicas": 10,
+                "buffer_depth": 240,
+                "node_size_class": "M",
+                "current_hourly_cost": 10.0,
+                "node_bin_density": [
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
+                ]
+            },
+            "dynamics": {
+                "reason": "sinusoidal_load_model"
+            }
+        },
+        {
+            "step": 15,
+            "observation": {
+                "cpu_usage_pct": 10.0,
+                "mem_usage_pct": 36.84,
+                "p99_latency_ms": 180.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.25,
+                "active_replicas": 10,
+                "buffer_depth": 250,
+                "node_size_class": "M",
+                "current_hourly_cost": 10.0,
+                "node_bin_density": [
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
+                ]
+            },
+            "dynamics": {
+                "reason": "sinusoidal_load_model"
+            }
+        },
+        {
+            "step": 16,
+            "observation": {
+                "cpu_usage_pct": 11.47,
+                "mem_usage_pct": 39.7,
+                "p99_latency_ms": 182.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.25,
+                "active_replicas": 10,
+                "buffer_depth": 260,
+                "node_size_class": "M",
+                "current_hourly_cost": 10.0,
+                "node_bin_density": [
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
+                ]
+            },
+            "dynamics": {
+                "reason": "sinusoidal_load_model"
+            }
+        },
+        {
+            "step": 17,
+            "observation": {
+                "cpu_usage_pct": 15.73,
+                "mem_usage_pct": 43.58,
+                "p99_latency_ms": 184.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.25,
+                "active_replicas": 10,
+                "buffer_depth": 270,
+                "node_size_class": "M",
+                "current_hourly_cost": 10.0,
+                "node_bin_density": [
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
+                ]
+            },
+            "dynamics": {
+                "reason": "sinusoidal_load_model"
+            }
+        },
+        {
+            "step": 18,
+            "observation": {
+                "cpu_usage_pct": 22.37,
+                "mem_usage_pct": 48.08,
+                "p99_latency_ms": 186.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.01,
+                "active_replicas": 10,
+                "buffer_depth": 280,
+                "node_size_class": "M",
+                "current_hourly_cost": 10.0,
+                "node_bin_density": [
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
+                ]
+            },
+            "dynamics": {
+                "reason": "sinusoidal_load_model"
+            }
+        },
+        {
+            "step": 19,
+            "observation": {
+                "cpu_usage_pct": 30.73,
+                "mem_usage_pct": 52.77,
+                "p99_latency_ms": 188.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.01,
+                "active_replicas": 10,
+                "buffer_depth": 290,
+                "node_size_class": "M",
+                "current_hourly_cost": 10.0,
+                "node_bin_density": [
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
+                ]
+            },
+            "dynamics": {
+                "reason": "sinusoidal_load_model"
+            }
+        },
+        {
+            "step": 20,
+            "observation": {
+                "cpu_usage_pct": 40.0,
+                "mem_usage_pct": 57.19,
+                "p99_latency_ms": 190.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.01,
+                "active_replicas": 10,
+                "buffer_depth": 300,
+                "node_size_class": "M",
+                "current_hourly_cost": 10.0,
+                "node_bin_density": [
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
+                ]
+            },
+            "dynamics": {
+                "reason": "sinusoidal_load_model"
+            }
+        },
+        {
+            "step": 21,
+            "observation": {
+                "cpu_usage_pct": 49.27,
+                "mem_usage_pct": 60.91,
+                "p99_latency_ms": 192.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.01,
+                "active_replicas": 10,
+                "buffer_depth": 310,
+                "node_size_class": "M",
+                "current_hourly_cost": 10.0,
+                "node_bin_density": [
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
+                ]
+            },
+            "dynamics": {
+                "reason": "sinusoidal_load_model"
+            }
+        },
+        {
+            "step": 22,
+            "observation": {
+                "cpu_usage_pct": 57.63,
+                "mem_usage_pct": 63.56,
+                "p99_latency_ms": 194.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.01,
+                "active_replicas": 10,
+                "buffer_depth": 320,
+                "node_size_class": "M",
+                "current_hourly_cost": 10.0,
+                "node_bin_density": [
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
+                ]
+            },
+            "dynamics": {
+                "reason": "sinusoidal_load_model"
+            }
+        },
+        {
+            "step": 23,
+            "observation": {
+                "cpu_usage_pct": 64.27,
+                "mem_usage_pct": 64.88,
+                "p99_latency_ms": 196.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.01,
+                "active_replicas": 10,
+                "buffer_depth": 330,
+                "node_size_class": "M",
+                "current_hourly_cost": 10.0,
+                "node_bin_density": [
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
+                ]
+            },
+            "dynamics": {
+                "reason": "sinusoidal_load_model"
+            }
+        },
+        {
+            "step": 24,
+            "observation": {
+                "cpu_usage_pct": 68.53,
+                "mem_usage_pct": 64.74,
+                "p99_latency_ms": 198.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.01,
+                "active_replicas": 10,
+                "buffer_depth": 340,
+                "node_size_class": "M",
+                "current_hourly_cost": 10.0,
+                "node_bin_density": [
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
+                ]
+            },
+            "dynamics": {
+                "reason": "sinusoidal_load_model"
+            }
+        },
+        {
+            "step": 25,
+            "observation": {
+                "cpu_usage_pct": 70.0,
+                "mem_usage_pct": 63.16,
+                "p99_latency_ms": 200.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.25,
+                "active_replicas": 10,
+                "buffer_depth": 350,
+                "node_size_class": "M",
+                "current_hourly_cost": 10.0,
+                "node_bin_density": [
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
+                ]
+            },
+            "dynamics": {
+                "reason": "sinusoidal_load_model"
+            }
+        },
+        {
+            "step": 26,
+            "observation": {
+                "cpu_usage_pct": 68.53,
+                "mem_usage_pct": 60.3,
+                "p99_latency_ms": 202.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.25,
+                "active_replicas": 10,
+                "buffer_depth": 360,
+                "node_size_class": "M",
+                "current_hourly_cost": 10.0,
+                "node_bin_density": [
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
+                ]
+            },
+            "dynamics": {
+                "reason": "sinusoidal_load_model"
+            }
+        },
+        {
+            "step": 27,
+            "observation": {
+                "cpu_usage_pct": 64.27,
+                "mem_usage_pct": 56.42,
+                "p99_latency_ms": 204.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.25,
+                "active_replicas": 10,
+                "buffer_depth": 370,
+                "node_size_class": "M",
+                "current_hourly_cost": 10.0,
+                "node_bin_density": [
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
+                ]
+            },
+            "dynamics": {
+                "reason": "sinusoidal_load_model"
+            }
+        },
+        {
+            "step": 28,
+            "observation": {
+                "cpu_usage_pct": 57.63,
+                "mem_usage_pct": 51.92,
+                "p99_latency_ms": 206.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.01,
+                "active_replicas": 10,
+                "buffer_depth": 380,
+                "node_size_class": "M",
+                "current_hourly_cost": 10.0,
+                "node_bin_density": [
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
+                ]
+            },
+            "dynamics": {
+                "reason": "sinusoidal_load_model"
+            }
+        },
+        {
+            "step": 29,
+            "observation": {
+                "cpu_usage_pct": 49.27,
+                "mem_usage_pct": 47.23,
+                "p99_latency_ms": 208.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.01,
+                "active_replicas": 10,
+                "buffer_depth": 390,
+                "node_size_class": "M",
+                "current_hourly_cost": 10.0,
+                "node_bin_density": [
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
+                ]
+            },
+            "dynamics": {
+                "reason": "sinusoidal_load_model"
+            }
+        },
+        {
+            "step": 30,
+            "observation": {
+                "cpu_usage_pct": 40.0,
+                "mem_usage_pct": 42.81,
+                "p99_latency_ms": 210.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.01,
+                "active_replicas": 10,
+                "buffer_depth": 400,
+                "node_size_class": "M",
+                "current_hourly_cost": 10.0,
+                "node_bin_density": [
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
+                ]
+            },
+            "dynamics": {
+                "reason": "sinusoidal_load_model"
+            }
+        },
+        {
+            "step": 31,
+            "observation": {
+                "cpu_usage_pct": 30.73,
+                "mem_usage_pct": 39.09,
+                "p99_latency_ms": 212.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.01,
+                "active_replicas": 10,
+                "buffer_depth": 410,
+                "node_size_class": "M",
+                "current_hourly_cost": 10.0,
+                "node_bin_density": [
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
+                ]
+            },
+            "dynamics": {
+                "reason": "sinusoidal_load_model"
+            }
+        },
+        {
+            "step": 32,
+            "observation": {
+                "cpu_usage_pct": 22.37,
+                "mem_usage_pct": 36.44,
+                "p99_latency_ms": 214.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.01,
+                "active_replicas": 10,
+                "buffer_depth": 420,
+                "node_size_class": "M",
+                "current_hourly_cost": 10.0,
+                "node_bin_density": [
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
+                ]
+            },
+            "dynamics": {
+                "reason": "sinusoidal_load_model"
+            }
+        },
+        {
+            "step": 33,
+            "observation": {
+                "cpu_usage_pct": 15.73,
+                "mem_usage_pct": 35.12,
+                "p99_latency_ms": 216.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.01,
+                "active_replicas": 10,
+                "buffer_depth": 430,
+                "node_size_class": "M",
+                "current_hourly_cost": 10.0,
+                "node_bin_density": [
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
+                ]
+            },
+            "dynamics": {
+                "reason": "sinusoidal_load_model"
+            }
+        },
+        {
+            "step": 34,
+            "observation": {
+                "cpu_usage_pct": 11.47,
+                "mem_usage_pct": 35.26,
+                "p99_latency_ms": 218.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.01,
+                "active_replicas": 10,
+                "buffer_depth": 440,
+                "node_size_class": "M",
+                "current_hourly_cost": 10.0,
+                "node_bin_density": [
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
+                ]
+            },
+            "dynamics": {
+                "reason": "sinusoidal_load_model"
+            }
+        },
+        {
+            "step": 35,
+            "observation": {
+                "cpu_usage_pct": 10.0,
+                "mem_usage_pct": 36.84,
+                "p99_latency_ms": 220.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.25,
+                "active_replicas": 10,
+                "buffer_depth": 450,
+                "node_size_class": "M",
+                "current_hourly_cost": 10.0,
+                "node_bin_density": [
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
+                ]
+            },
+            "dynamics": {
+                "reason": "sinusoidal_load_model"
+            }
+        },
+        {
+            "step": 36,
+            "observation": {
+                "cpu_usage_pct": 11.47,
+                "mem_usage_pct": 39.7,
+                "p99_latency_ms": 222.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.25,
+                "active_replicas": 10,
+                "buffer_depth": 460,
+                "node_size_class": "M",
+                "current_hourly_cost": 10.0,
+                "node_bin_density": [
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
+                ]
+            },
+            "dynamics": {
+                "reason": "sinusoidal_load_model"
+            }
+        },
+        {
+            "step": 37,
+            "observation": {
+                "cpu_usage_pct": 15.73,
+                "mem_usage_pct": 43.58,
+                "p99_latency_ms": 224.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.25,
+                "active_replicas": 10,
+                "buffer_depth": 470,
+                "node_size_class": "M",
+                "current_hourly_cost": 10.0,
+                "node_bin_density": [
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
+                ]
+            },
+            "dynamics": {
+                "reason": "sinusoidal_load_model"
+            }
+        },
+        {
+            "step": 38,
+            "observation": {
+                "cpu_usage_pct": 22.37,
+                "mem_usage_pct": 48.08,
+                "p99_latency_ms": 226.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.01,
+                "active_replicas": 10,
+                "buffer_depth": 480,
+                "node_size_class": "M",
+                "current_hourly_cost": 10.0,
+                "node_bin_density": [
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
+                ]
+            },
+            "dynamics": {
+                "reason": "sinusoidal_load_model"
+            }
+        },
+        {
+            "step": 39,
+            "observation": {
+                "cpu_usage_pct": 30.73,
+                "mem_usage_pct": 52.77,
+                "p99_latency_ms": 228.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.01,
+                "active_replicas": 10,
+                "buffer_depth": 490,
+                "node_size_class": "M",
+                "current_hourly_cost": 10.0,
+                "node_bin_density": [
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
+                ]
+            },
+            "dynamics": {
+                "reason": "sinusoidal_load_model"
+            }
+        },
+        {
+            "step": 40,
+            "observation": {
+                "cpu_usage_pct": 40.0,
+                "mem_usage_pct": 57.19,
+                "p99_latency_ms": 230.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.01,
+                "active_replicas": 10,
+                "buffer_depth": 500,
+                "node_size_class": "M",
+                "current_hourly_cost": 10.0,
+                "node_bin_density": [
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
+                ]
+            },
+            "dynamics": {
+                "reason": "sinusoidal_load_model"
+            }
+        },
+        {
+            "step": 41,
+            "observation": {
+                "cpu_usage_pct": 49.27,
+                "mem_usage_pct": 60.91,
+                "p99_latency_ms": 232.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.01,
+                "active_replicas": 10,
+                "buffer_depth": 510,
+                "node_size_class": "M",
+                "current_hourly_cost": 10.0,
+                "node_bin_density": [
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
+                ]
+            },
+            "dynamics": {
+                "reason": "sinusoidal_load_model"
+            }
+        },
+        {
+            "step": 42,
+            "observation": {
+                "cpu_usage_pct": 57.63,
+                "mem_usage_pct": 63.56,
+                "p99_latency_ms": 234.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.01,
+                "active_replicas": 10,
+                "buffer_depth": 520,
+                "node_size_class": "M",
+                "current_hourly_cost": 10.0,
+                "node_bin_density": [
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
+                ]
+            },
+            "dynamics": {
+                "reason": "sinusoidal_load_model"
+            }
+        },
+        {
+            "step": 43,
+            "observation": {
+                "cpu_usage_pct": 64.27,
+                "mem_usage_pct": 64.88,
+                "p99_latency_ms": 236.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.01,
+                "active_replicas": 10,
+                "buffer_depth": 530,
+                "node_size_class": "M",
+                "current_hourly_cost": 10.0,
+                "node_bin_density": [
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
+                ]
+            },
+            "dynamics": {
+                "reason": "sinusoidal_load_model"
+            }
+        },
+        {
+            "step": 44,
+            "observation": {
+                "cpu_usage_pct": 68.53,
+                "mem_usage_pct": 64.74,
+                "p99_latency_ms": 238.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.01,
+                "active_replicas": 10,
+                "buffer_depth": 540,
+                "node_size_class": "M",
+                "current_hourly_cost": 10.0,
+                "node_bin_density": [
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
+                ]
+            },
+            "dynamics": {
+                "reason": "sinusoidal_load_model"
+            }
+        },
+        {
+            "step": 45,
+            "observation": {
+                "cpu_usage_pct": 70.0,
+                "mem_usage_pct": 63.16,
+                "p99_latency_ms": 240.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.25,
+                "active_replicas": 10,
+                "buffer_depth": 550,
+                "node_size_class": "M",
+                "current_hourly_cost": 10.0,
+                "node_bin_density": [
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
+                ]
+            },
+            "dynamics": {
+                "reason": "sinusoidal_load_model"
+            }
+        },
+        {
+            "step": 46,
+            "observation": {
+                "cpu_usage_pct": 68.53,
+                "mem_usage_pct": 60.3,
+                "p99_latency_ms": 242.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.25,
+                "active_replicas": 10,
+                "buffer_depth": 560,
+                "node_size_class": "M",
+                "current_hourly_cost": 10.0,
+                "node_bin_density": [
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
+                ]
+            },
+            "dynamics": {
+                "reason": "sinusoidal_load_model"
+            }
+        },
+        {
+            "step": 47,
+            "observation": {
+                "cpu_usage_pct": 64.27,
+                "mem_usage_pct": 56.42,
+                "p99_latency_ms": 244.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.25,
+                "active_replicas": 10,
+                "buffer_depth": 570,
+                "node_size_class": "M",
+                "current_hourly_cost": 10.0,
+                "node_bin_density": [
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
+                ]
+            },
+            "dynamics": {
+                "reason": "sinusoidal_load_model"
+            }
+        },
+        {
+            "step": 48,
+            "observation": {
+                "cpu_usage_pct": 57.63,
+                "mem_usage_pct": 51.92,
+                "p99_latency_ms": 246.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.01,
+                "active_replicas": 10,
+                "buffer_depth": 580,
+                "node_size_class": "M",
+                "current_hourly_cost": 10.0,
+                "node_bin_density": [
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
+                ]
+            },
+            "dynamics": {
+                "reason": "sinusoidal_load_model"
+            }
+        },
+        {
+            "step": 49,
+            "observation": {
+                "cpu_usage_pct": 49.27,
+                "mem_usage_pct": 47.23,
+                "p99_latency_ms": 248.0,
+                "http_error_rate": 0.01,
+                "cpu_steal_pct": 0.01,
+                "active_replicas": 10,
+                "buffer_depth": 590,
+                "node_size_class": "M",
+                "current_hourly_cost": 10.0,
+                "node_bin_density": [
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5,
+                    0.5
+                ]
+            },
+            "dynamics": {
+                "reason": "sinusoidal_load_model"
+            }
         }
     ]
 }

@@ -231,7 +231,7 @@ Observations are taken DIRECTLY from traces with NO formula overlays:
 **Task 3: Entropy Storm (Hard)**
 
 - **Metric:** Proactive REBALANCE actions within 5 steps before steal violation
-- **Score:** `proactive_actions / total_violations` (or 0.5+ if no violations and passive)
+- **Score:** `proactive_actions / total_violations` (or 0.0 if no violations and passive)
 - **Pass:** Score > 0.6
 
 See [PROJECT_SPEC.md](PROJECT_SPEC.md) for full scoring formulas.
@@ -535,7 +535,7 @@ k8s-cost-optimizer/
 ├── models.py                 ← Pydantic type definitions
 ├── env.py                    ← KubeCostEnv (OpenEnv interface)
 ├── graders.py                ← Three task graders
-├── inference.py              ← Gemini LLM agent (in root)
+├── inference.py              ← LLM agent (in root)
 │
 ├── server/
 │   └── app.py                ← FastAPI REST server (openenv-core)

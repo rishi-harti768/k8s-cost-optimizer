@@ -218,13 +218,13 @@ class EntropyStormGrader:
 
     Algorithm:
         1. Identify every violation step  (cpu_steal_pct >= 0.20).
-        2. If no violations ever occur    → return 1.0  (agent won outright).
+        2. If no violations ever occur    → return 0.0  (passive agent).
         3. For each violation at index i:
                Look back through steps [max(0, i − LOOKBACK_WINDOW), i − 1].
                If any step in that window took action REBALANCE_NODE:
                    proactive_actions += 1
-        4. success_rate = proactive_actions / total_violations
-        5. final_score  = max(0.0, min(1.0, success_rate))
+        4. Score: `proactive_actions / total_violations`
+           final_score = max(0.0, min(1.0, success_rate))
 
     Lookback window:
         Default = 5 steps. The agent must act within 5 steps before the
@@ -237,7 +237,7 @@ class EntropyStormGrader:
 
     Special cases:
         Empty trajectory         → 0.0
-        Zero violations          → 1.0  (agent prevented every breach)
+        Zero violations          → 0.0  (inaction on hard task is not rewarded)
 
     Reference:
         PROJECT_SPEC.md §6 Task 3 Entropy Storm
@@ -277,8 +277,8 @@ class EntropyStormGrader:
                 # Agent was actively trying to prevent (proactive even when not needed)
                 return 1.0
             else:
-                # Agent did nothing; don't reward inaction
-                return 0.5
+                # Agent did nothing; don't reward inaction on the hardest task
+                return 0.0
 
         total_violations = len(violation_indices)
         proactive_actions = 0

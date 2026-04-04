@@ -230,12 +230,12 @@ def check_graders() -> bool:
 
             # EntropyStorm specifics - If no violations, returns 1.0 only if REBALANCE_NODE actions exist
             if grader.__class__.__name__ == "EntropyStormGrader":
-                # In a healthy trajectory with no violations, the grader may return 0.5
+                # In a healthy trajectory with no violations, the grader may return 0.0
                 # (passive/no action) or 1.0 (active REBALANCE_NODE). Both are valid.
-                if score not in (0.5, 1.0):
+                if score not in (0.0, 1.0):
                     raise ValidationError(
                         f"{grader.__class__.__name__}: score {score} unexpected "
-                        f"for healthy trajectory (expect 0.5 or 1.0)"
+                        f"for healthy trajectory (expect 0.0 or 1.0)"
                     )
 
             logger.info(

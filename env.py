@@ -381,28 +381,34 @@ class KubeCostEnv:
             done = True
             return self._current_obs, 0.0, done, {}
         
-        # 2. Load next observation from trace
+        # 2. Load next observation from trace (as baseline)
         trace_idx = self._step
-        new_obs = self.steps_data[trace_idx].observation
+        trace_step = self.steps_data[trace_idx]
+        trace_obs = trace_step.observation
         
-        # 3. Capture steal BEFORE reward calculation (for proactive bonus)
+        # 3. Create physics-modified observation (deep copy to avoid trace mutation)
+        new_obs = trace_obs.model_copy(deep=True)
+        
+        # 4. Capture steal BEFORE reward calculation (for proactive bonus)
         if self._current_obs is not None:
             self._prev_steal_pct = self._current_obs.cpu_steal_pct
-        
-        # 4. Set new observation (observations are directly from trace, no formula overlays)
-        self._current_obs = new_obs
         
         # 5. Apply action to internal state (replicas, node_size)
         self._apply_action(action)
         
-        # 6. Compute reward (uses correct prev/curr steal comparison)
+        # 6. Apply physics overlay (actions now HAVE causal effect)
+        self._apply_physics(new_obs, trace_obs)
+        
+        # 7. Set new observation as current
+        self._current_obs = new_obs
+        
+        # 8. Compute reward (uses physics-updated observation)
         reward: float = self._calculate_reward()
         
-        # 7. Determine done
+        # 9. Determine done
         done: bool = self._step >= self.total_steps - 1
         
-        # 8. Build info dict
-        trace_step = self.steps_data[trace_idx]
+        # 10. Build info dict
         info: Dict[str, Any] = {
             "step": self._step,
             "task_name": self.trace.task_name,
@@ -412,7 +418,7 @@ class KubeCostEnv:
             "trace_reason": trace_step.dynamics.get("reason", ""),
         }
         
-        # 9. Log to trajectory (without redundant metrics)
+        # 11. Log to trajectory (without redundant metrics)
         self._trajectory.append(
             TrajectoryStep(
                 observation=self._current_obs,
@@ -521,6 +527,46 @@ class KubeCostEnv:
     # ------------------------------------------------------------------
     # Accessors (convenience)
     # ------------------------------------------------------------------
+
+    def _apply_physics(self, obs: Observation, trace_obs: Observation) -> None:
+        """
+        Update observation based on current environment state (Physics Overlay).
+        
+        Args:
+            obs: The observation to modify (already a deep copy).
+            trace_obs: The original trace observation for baseline comparison.
+        """
+        # 1. Update replicas and node size (Direct causality)
+        obs.active_replicas = self._replicas
+        obs.node_size_class = self._node_size
+        
+        # 2. Update cost based on replicas and tier
+        # Base: S=$10, M=$25, L=$50. Variable: $1/pod/hr.
+        base_costs = {
+            NodeSizeClass.SMALL: 10.0,
+            NodeSizeClass.MEDIUM: 25.0,
+            NodeSizeClass.LARGE: 50.0
+        }
+        tier = self._node_size
+        base = base_costs.get(tier, 10.0)
+        obs.current_hourly_cost = base + (self._replicas * 1.0)
+        
+        # 3. Dynamic error rate scaling (Inverse scaling)
+        # If agent has more replicas than trace, error rate drops.
+        # If fewer, error rate spikes.
+        # Use +1 to avoid div-by-zero for 0-replica trace baselines.
+        replica_ratio = (trace_obs.active_replicas + 1) / (self._replicas + 1)
+        
+        # Simple interpolation: error_rate scales with the gap
+        obs.http_error_rate = min(1.0, trace_obs.http_error_rate * replica_ratio)
+        
+        # 4. Dynamic latency scaling
+        if replica_ratio > 1.0:
+            # Under-provisioned: latency increases non-linearly
+            obs.p99_latency_ms = trace_obs.p99_latency_ms * (replica_ratio ** 1.5)
+        else:
+            # Over-provisioned: latency drops slightly, but has a floor
+            obs.p99_latency_ms = max(40.0, trace_obs.p99_latency_ms * replica_ratio)
 
     @property
     def trajectory(self) -> list[TrajectoryStep]:
