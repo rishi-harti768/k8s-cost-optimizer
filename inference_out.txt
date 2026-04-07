@@ -1,0 +1,4 @@
+[INFO] API_BASE_URL : https://integrate.api.nvidia.com/v1
+[INFO] MODEL_NAME   : openai/gpt-oss-120b
+[INFO] HF_TOKEN     : ******** (hidden)
+[START] {"task": "cold_start", "model": "openai/gpt-oss-120b", "max_steps": 200}
