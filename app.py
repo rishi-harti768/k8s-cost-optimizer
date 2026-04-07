@@ -34,11 +34,24 @@ app = FastAPI(
     version="3.0",
 )
 
-TASK_TRACES: Dict[str, str] = {
-    "cold_start":        "traces/trace_v1_coldstart.json",
-    "efficient_squeeze": "traces/trace_v1_squeeze.json",
-    "entropy_storm":     "traces/trace_v1_entropy.json",
-}
+# ===== TRACES CONFIGURATION =====
+# Read traces directory from environment variable, default to "traces"
+TRACES_DIR = os.getenv("TRACES_DIR", "traces")
+TRACE_STEPS = int(os.getenv("TRACE_STEPS", "50"))  # Number of steps per trace
+TRACE_VERSION = os.getenv("TRACE_VERSION", "v1")  # Which trace version to use (v1-v9)
+
+# Task-to-trace mapping can be overridden via environment variables
+# Format: TASK_TRACE_<TASK_NAME>=<path/to/trace.json>
+def _load_task_traces() -> Dict[str, str]:
+    """Load task traces from environment variables or use defaults."""
+    traces = {
+        "cold_start":        os.getenv("TASK_TRACE_COLD_START", f"{TRACES_DIR}/trace_{TRACE_VERSION}_coldstart.json"),
+        "efficient_squeeze": os.getenv("TASK_TRACE_EFFICIENT_SQUEEZE", f"{TRACES_DIR}/trace_{TRACE_VERSION}_squeeze.json"),
+        "entropy_storm":     os.getenv("TASK_TRACE_ENTROPY_STORM", f"{TRACES_DIR}/trace_{TRACE_VERSION}_entropy.json"),
+    }
+    return traces
+
+TASK_TRACES: Dict[str, str] = _load_task_traces()
 DEFAULT_TASK = "cold_start"
 
 _env: Optional[KubeCostEnv] = None

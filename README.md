@@ -113,7 +113,7 @@ This repository now uses programmatic 50-step traces for all primary tasks and r
 
 #### Traces and Validation
 
-- Primary task traces are programmatically generated as 50-step episodes.
+- Primary task traces are programmatically generated as 25-step episodes.
 - `generate_traces.py` is the single source of trace generation for cold-start, squeeze, and entropy tasks.
 - This provides a stable test bed while preserving realistic sinusoidal load cycles and noisy-neighbor events.
 

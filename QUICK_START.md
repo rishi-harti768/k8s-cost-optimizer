@@ -1,171 +1,159 @@
-# 🚀 Quick Start Guide - KubeCost Inference with NVIDIA API
+# Quick Start Guide
 
-## Configuration ✅
+## Setup
 
-Your `.env` file is already configured:
-```ini
-HF_TOKEN=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
-API_BASE_URL=https://integrate.api.nvidia.com/v1
-MODEL_NAME=openai/gpt-oss-120b
-PORT=7860
-SERVER_NAME=0.0.0.0
-```
+### Step 1: Configure Environment Variables
 
-## Run Inference
+**Option A: Use .env file (Recommended)**
 
-```bash
-# From project root
-cd /path/to/hackathon
+1. Edit the `.env` file in the project root:
+   ```bash
+   # Open .env and replace 'your-api-key-here' with your actual key
+   HF_TOKEN=your-actual-api-key
+   MODEL_NAME=mistralai/Mistral-7B-Instruct-v0.2
+   API_BASE_URL=https://api.openai.com/v1
+   ```
+
+2. See `.env.example` for more provider examples
+
+**Option B: Set Environment Variables Manually**
+
+**Option B: Set Environment Variables Manually**
+
+**Windows (PowerShell):**
+```powershell
+$env:HF_TOKEN = "your-api-key-here"
 uv run python inference.py
 ```
+
+**Windows (CMD):**
+```cmd
+set HF_TOKEN=your-api-key-here
+uv run python inference.py
+```
+
+**Linux/Mac:**
+```bash
+export HF_TOKEN="your-api-key-here"
+uv run python inference.py
+```
+
+### Option 2: Use Setup Script (Windows PowerShell)
+
+```powershell
+# Run the setup script
+. .\setup_env.ps1
+
+# Then run inference
+uv run python inference.py
+```
+
+### Option 3: For Testing (No Real API Key)
+
+```powershell
+# Use dummy token for testing (will fail at LLM calls but validates setup)
+$env:HF_TOKEN = "dummy-token"
+uv run python inference.py
+```
+
+### Step 2: Run Inference
+
+Once your environment is configured:
+
+```bash
+# Using uv (recommended)
+uv run python inference.py
+
+# Or using regular python
+python inference.py
+```
+
+## Configuration Options
+
+### Required
+- **HF_TOKEN**: Your API key (OpenAI, HuggingFace, etc.)
+
+### Optional (have defaults)
+- **MODEL_NAME**: Default is `mistralai/Mistral-7B-Instruct-v0.2`
+- **API_BASE_URL**: Default is `https://api.openai.com/v1`
+
+## Examples
+
+### Using OpenAI GPT-4
+```powershell
+$env:HF_TOKEN = "sk-your-openai-key"
+$env:MODEL_NAME = "gpt-4"
+$env:API_BASE_URL = "https://api.openai.com/v1"
+uv run python inference.py
+```
+
+### Using HuggingFace Models
+```powershell
+$env:HF_TOKEN = "hf_your-huggingface-token"
+$env:MODEL_NAME = "mistralai/Mistral-7B-Instruct-v0.2"
+$env:API_BASE_URL = "https://api-inference.huggingface.co/models"
+uv run python inference.py
+```
+
+### Using NVIDIA API
+```powershell
+$env:HF_TOKEN = "nvapi-your-nvidia-key"
+$env:MODEL_NAME = "openai/gpt-oss-120b"
+$env:API_BASE_URL = "https://integrate.api.nvidia.com/v1"
+uv run python inference.py
+```
+
+## Troubleshooting
+
+### Error: "HF_TOKEN environment variable is required"
+**Solution:** Set the HF_TOKEN environment variable before running:
+```powershell
+$env:HF_TOKEN = "your-api-key"
+```
+
+### Error: "VIRTUAL_ENV=venv does not match"
+**Solution:** This is just a warning. You can:
+1. Ignore it (it won't affect execution)
+2. Or deactivate venv and use uv's managed environment:
+   ```powershell
+   deactivate
+   uv run python inference.py
+   ```
+
+### Error: "Empty text from API"
+**Solution:** Your model might not support JSON mode. Try:
+1. Use a different model (e.g., gpt-4)
+2. Or check your API endpoint is correct
 
 ## Expected Output
 
 ```
-[INFO] API_BASE_URL : https://integrate.api.nvidia.com/v1
-[INFO] MODEL_NAME   : openai/gpt-oss-120b
+[INFO] API_BASE_URL : https://api.openai.com/v1
+[INFO] MODEL_NAME   : mistralai/Mistral-7B-Instruct-v0.2
 [INFO] HF_TOKEN     : ******** (hidden)
-
-[START] {"task": "cold_start", "model": "openai/gpt-oss-120b", "max_steps": 200}
-[STEP] {"task": "cold_start", "step": 1, ...}
+[START] {"task": "cold_start", "model": "...", "max_steps": 200}
+[STEP]  {"task": "cold_start", "step": 1, "action": "...", ...}
 ...
-[END] {"task": "cold_start", "score": 0.4610, "total_steps": 49, "status": "success"}
-
+[END]   {"task": "cold_start", "score": 0.85, "total_steps": 25, "status": "success"}
+...
 ============================================================
 INFERENCE RESULTS SUMMARY
 ============================================================
-  [PASS] cold_start: 0.4610
-  [PASS] efficient_squeeze: 0.0000
-  [PASS] entropy_storm: 0.1220
+  [PASS] cold_start: 0.8500
+  [PASS] efficient_squeeze: 0.7200
+  [PASS] entropy_storm: 0.6100
 
-  Average score : 0.1943
+  Average score : 0.7267
 ============================================================
 ```
 
-## Test Scripts
+## Next Steps
 
-### Check API Connectivity
-```bash
-uv run python test_nvidia_api.py
-```
-
-### Run Individual Task
-Edit `inference.py` and modify `TASKS` list to run specific tasks only.
-
-## File Structure
-```
-hackathon/
-├── .env                           # Configuration (yours)
-├── inference.py                   # Main pipeline ✅ UPDATED
-├── env.py                         # KubeCost environment
-├── models.py                      # Data models
-├── graders.py                     # Scoring graders
-├── test_nvidia_api.py            # API test script ✅ NEW
-├── INFERENCE_STATUS.md           # Detailed status ✅ NEW
-└── INFERENCE_TEST_RESULTS.md    # Test results ✅ NEW
-```
-
-## Performance Stats
-
-| Metric | Value |
-|--------|-------|
-| Average Score | 19.43% |
-| Success Rate | 100% |
-| Runtime | ~10 minutes |
-| Tasks | 3 |
-| Steps/Task | 49 avg |
-
-## Troubleshooting
-
-### Empty API Responses
-- **Cause**: NVIDIA API rate limiting or temporary issues
-- **Solution**: Already handled with fallback to MAINTAIN
-- **Note**: Not critical - graceful degradation works
-
-### JSON Parse Errors
-- **Cause**: Malformed LLM responses
-- **Solution**: Already handled with try-catch
-- **Note**: Rare (< 5% of calls)
-
-### Slow Execution
-- **Cause**: NVIDIA API latency
-- **Note**: Normal behavior, each API call takes ~1-2 seconds
-
-## Deployment to HuggingFace Spaces
-
-1. Go to: https://huggingface.co/spaces/rishi-harti768/k8s-cost-optimizer
-2. Click "Settings" → "Repository Secrets"
-3. Add secrets:
-   - `HF_TOKEN`: Your NVIDIA API key
-   - `API_BASE_URL`: `https://integrate.api.nvidia.com/v1`
-   - `MODEL_NAME`: `openai/gpt-oss-120b`
-4. Push code to trigger deploy
-
-## Key Changes Made
-
-### 1. Added `.env` Loading
-```python
-def load_env():
-    env_path = Path(__file__).parent / ".env"
-    if env_path.exists():
-        with open(env_path) as f:
-            for line in f:
-                line = line.strip()
-                if line and not line.startswith("#"):
-                    if "=" in line:
-                        key, value = line.split("=", 1)
-                        os.environ.setdefault(key.strip(), value.strip())
-```
-
-### 2. Increased Token Limit
-```python
-# Before: max_tokens=50 (caused truncation)
-# After: max_tokens=200 (complete responses)
-response = self.client.chat.completions.create(
-    model=self.model_name,
-    messages=[...],
-    temperature=0.3,
-    max_tokens=200,  # ✅ UPDATED
-)
-```
-
-### 3. Added Response Validation
-```python
-if not response.choices or not response.choices[0].message.content:
-    raise ValueError("Empty response from API")
-```
-
-## Monitoring Commands
-
-```bash
-# Check for errors
-grep -i "error\|warn" inference.log
-
-# Count API failures
-grep -c "LLM decision failed" inference.log
-
-# Extract final scores
-grep "score" inference.log | tail -3
-```
-
-## API Details
-
-- **Provider**: NVIDIA
-- **Model**: GPT-OSS-120B
-- **Endpoint**: https://integrate.api.nvidia.com/v1
-- **Status**: ✅ Working
-- **Rate Limit**: Adequate (no blocking observed)
-
-## Support
-
-For issues:
-1. Check logs for error messages
-2. Verify `.env` file has correct credentials
-3. Test with `test_nvidia_api.py`
-4. Review `INFERENCE_TEST_RESULTS.md` for known issues
+1. **Test locally** with your API key
+2. **Review scores** in the summary
+3. **Deploy to HuggingFace Spaces** when ready
+4. **Set secrets** in Space settings (HF_TOKEN, MODEL_NAME, API_BASE_URL)
 
 ---
 
-**Last Updated**: 2026-04-07
-**Status**: ✅ Production Ready
-**Next Review**: After improvements implemented
+**Need help?** Check `FINAL_CONFIGURATION.md` for detailed setup information.

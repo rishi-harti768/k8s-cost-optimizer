@@ -1,8 +1,15 @@
+import os
 import json
 import math
 from pathlib import Path
 
-def generate_sinusoidal_trace(task_name, difficulty, steps=50):
+# ===== CONFIGURATION FROM ENVIRONMENT VARIABLES =====
+TRACE_STEPS = int(os.getenv("TRACE_STEPS", "25"))
+TRACE_MAX_COUNT = int(os.getenv("TRACE_MAX_COUNT", "9999"))
+
+def generate_sinusoidal_trace(task_name, difficulty, steps=None):
+    if steps is None:
+        steps = TRACE_STEPS
     steps_data = []
     for i in range(steps):
         # Smooth sinusoidal load curves for CPU/memory and latency.
@@ -84,10 +91,12 @@ def generate_sinusoidal_trace(task_name, difficulty, steps=50):
     }
 
 def main():
-    traces_dir = Path("traces")
+    # Read traces directory from environment variable, default to "traces"
+    traces_dir_path = os.getenv("TRACES_DIR", "traces")
+    traces_dir = Path(traces_dir_path)
     traces_dir.mkdir(exist_ok=True)
 
-    # All 20 traces present in the directory
+    # All 15 traces (v1-v5 only)
     trace_files = [
         ("cold_start", "easy", "trace_v1_coldstart.json"),
         ("entropy_storm", "hard", "trace_v1_entropy.json"),
@@ -104,20 +113,16 @@ def main():
         ("cold_start", "easy", "trace_v5_coldstart_optimal.json"),
         ("entropy_storm", "hard", "trace_v5_entropy_extreme_chaos.json"),
         ("efficient_squeeze", "medium", "trace_v5_squeeze_optimized.json"),
-        ("entropy_storm", "hard", "trace_v6_entropy_node_upgrade.json"),
-        ("efficient_squeeze", "medium", "trace_v6_squeeze_challenge.json"),
-        ("entropy_storm", "hard", "trace_v7_entropy_degradation.json"),
-        ("entropy_storm", "hard", "trace_v8_entropy_recovery.json"),
-        ("entropy_storm", "hard", "trace_v9_entropy_optimal.json"),
     ]
 
-    for task_name, diff, filename in trace_files:
+    for task_name, diff, filename in trace_files[:TRACE_MAX_COUNT]:
         print(f"Generating {filename}...")
-        data = generate_sinusoidal_trace(task_name, diff)
+        data = generate_sinusoidal_trace(task_name, diff, steps=TRACE_STEPS)
         with (traces_dir / filename).open("w", encoding="utf-8") as f:
             json.dump(data, f, indent=4)
     
-    print(f"Done generating {len(trace_files)} traces.")
+    print(f"Done generating {min(TRACE_MAX_COUNT, len(trace_files))} traces (out of {len(trace_files)} available).")
+    print(f"Config: TRACE_STEPS={TRACE_STEPS}, TRACE_MAX_COUNT={TRACE_MAX_COUNT}")
 
 if __name__ == "__main__":
     main()

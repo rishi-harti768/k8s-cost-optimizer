@@ -296,32 +296,32 @@ def check_env_structure() -> bool:
 
 def check_requirements_openai() -> bool:
     """
-    Validate requirements.txt includes OpenAI, not Google Gemini.
+    Validate pyproject.toml includes OpenAI, not Google Gemini.
 
     Returns:
         bool: True if using OpenAI (or safe to proceed), False if using Google Gemini.
     """
     try:
-        req_path = Path("requirements.txt")
-        if not req_path.exists():
-            logger.warning("  [WARN] requirements.txt not found")
+        toml_path = Path("pyproject.toml")
+        if not toml_path.exists():
+            logger.warning("  [WARN] pyproject.toml not found")
             return True
 
-        content = req_path.read_text()
+        content = toml_path.read_text()
 
         has_openai = "openai" in content.lower()
         has_google = "google-generativeai" in content.lower()
 
         if has_google:
             logger.error(
-                "  [FAIL] requirements.txt includes Google Gemini (should be OpenAI)"
+                "  [FAIL] pyproject.toml includes Google Gemini (should be OpenAI)"
             )
             return False
         elif has_openai:
-            logger.info("  [PASS] requirements.txt uses OpenAI (not Google Gemini)")
+            logger.info("  [PASS] pyproject.toml uses OpenAI (not Google Gemini)")
             return True
         else:
-            logger.warning("  [WARN] OpenAI not found in requirements.txt")
+            logger.warning("  [WARN] OpenAI not found in pyproject.toml")
             return True
 
     except Exception as e:

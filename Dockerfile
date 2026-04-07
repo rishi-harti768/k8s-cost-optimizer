@@ -8,11 +8,15 @@ FROM python:3.10-slim
 # Set working directory
 WORKDIR /app
 
-# Copy requirements first (layer caching — reinstall only when deps change)
-COPY requirements.txt .
+# Copy build definition first (layer caching)
+COPY pyproject.toml .
+# Optionally copy lockfile for reproducibility if present
+COPY uv.lock* .
 
-# Install dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Install dependencies directly from pyproject.toml
+# Using --upgrade pip for manifest reliability as requested by SDD Phase 5
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir --retries 3 --timeout 60 .
 
 # Copy application code
 COPY . .
