@@ -24,8 +24,6 @@ import sys
 from typing import List, Dict, Any
 from pathlib import Path
 
-from openai import OpenAI
-
 from env import KubeCostEnv
 from graders import ColdStartGrader, EfficientSqueezeGrader, EntropyStormGrader
 from models import Observation, Action, ActionType
@@ -128,6 +126,11 @@ class CostOptimizerAgent:
     )
 
     def __init__(self) -> None:
+        # Import OpenAI lazily here to avoid ModuleNotFoundError during module import.
+        # This allows inference.py to be imported even if openai isn't available yet.
+        # The import only happens when CostOptimizerAgent is actually instantiated.
+        from openai import OpenAI
+        
         self.model_name   = os.environ.get("MODEL_NAME", "mistralai/Mistral-7B-Instruct-v0.2")
         self.api_base_url = os.environ.get("API_BASE_URL", "https://api.openai.com/v1")
         self.hf_token     = os.environ.get("HF_TOKEN", "")
