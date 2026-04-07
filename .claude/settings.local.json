@@ -10,7 +10,18 @@
       "Bash(uv sync:*)",
       "Bash(curl -v http://127.0.0.1:7860/reset -X POST -H \"Content-Type: application/json\" -d '{}')",
       "Bash(pkill -f \"python.*app\")",
-      "Bash(ls -lh *.py)"
+      "Bash(ls -lh *.py)",
+      "Bash(dir \"c:\\\\Users\\\\Sameer Khan S\\\\Desktop\\\\hackathon\")",
+      "Bash(python -m pip install openai pydantic pyyaml fastapi uvicorn gradio openenv-core --upgrade)",
+      "Bash(python -m pip install uv)",
+      "Bash(python -c \"from openai import OpenAI; print\\('✓ OpenAI imported successfully'\\)\")",
+      "Bash(python -c \"from openai import OpenAI; print\\('OK: OpenAI imported successfully'\\)\")",
+      "Bash(uv lock:*)",
+      "Bash(python inference.py)",
+      "Bash(python -c \"import openenv_core; print\\('openenv_core available'\\)\")",
+      "Bash(python -c \"import openenv; print\\('openenv available'\\)\")",
+      "Bash(python:*)",
+      "Bash(uv export:*)"
     ]
   }
 }
