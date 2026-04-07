@@ -24,25 +24,40 @@ import sys
 from typing import List, Dict, Any
 from pathlib import Path
 
-from env import KubeCostEnv
-from graders import ColdStartGrader, EfficientSqueezeGrader, EntropyStormGrader
-from models import Observation, Action, ActionType
+try:
+    from env import KubeCostEnv
+    from graders import ColdStartGrader, EfficientSqueezeGrader, EntropyStormGrader
+    from models import Observation, Action, ActionType
+except ModuleNotFoundError as e:
+    print(f"[ERROR] Failed to import required module: {e}", file=sys.stderr, flush=True)
+    print(f"[ERROR] Make sure all dependencies are installed: pip install -r requirements.txt", file=sys.stderr, flush=True)
+    sys.exit(1)
+except Exception as e:
+    print(f"[ERROR] Failed to import modules: {e}", file=sys.stderr, flush=True)
+    sys.exit(1)
 
 # Load environment variables from .env file if it exists
 def load_env():
     """Load environment variables from .env file."""
-    env_path = Path(__file__).parent / ".env"
-    if env_path.exists():
-        with open(env_path) as f:
-            for line in f:
-                line = line.strip()
-                if line and not line.startswith("#") and "=" in line:
-                    key, value = line.split("=", 1)
-                    key = key.strip()
-                    value = value.strip()
-                    # Only set if not already in environment
-                    if key and value and not os.environ.get(key):
-                        os.environ[key] = value
+    try:
+        env_path = Path(__file__).parent / ".env"
+        if env_path.exists():
+            with open(env_path) as f:
+                for line in f:
+                    try:
+                        line = line.strip()
+                        if line and not line.startswith("#") and "=" in line:
+                            key, value = line.split("=", 1)
+                            key = key.strip()
+                            value = value.strip()
+                            # Only set if not already in environment
+                            if key and value and not os.environ.get(key):
+                                os.environ[key] = value
+                    except Exception as exc:
+                        print(f"[WARN] Error parsing .env line: {exc}", file=sys.stderr)
+                        continue
+    except Exception as exc:
+        print(f"[WARN] Error loading .env file: {exc}", file=sys.stderr)
 
 load_env()
 
@@ -325,4 +340,13 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\n[ERROR] Inference interrupted by user", file=sys.stderr, flush=True)
+        sys.exit(130)
+    except Exception as e:
+        print(f"\n[ERROR] Unhandled exception in inference: {e}", file=sys.stderr, flush=True)
+        import traceback
+        traceback.print_exc(file=sys.stderr)
+        sys.exit(1)
