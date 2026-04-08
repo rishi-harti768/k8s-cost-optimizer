@@ -1,3 +1,4 @@
+
 #!/usr/bin/env bash
 #
 # validate-submission.sh — OpenEnv Submission Validator
