@@ -47,7 +47,7 @@ class _GraderConfig:
     STEAL_THRESHOLD: float = 0.20
 
     # Entropy storm parameters
-    LOOKBACK_WINDOW: int = 2
+    LOOKBACK_WINDOW: int = 5
     
     # Cost budget for normalization
     BUDGET: float = 100.0

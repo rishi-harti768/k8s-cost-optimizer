@@ -317,6 +317,7 @@ class KubeCostEnv(Environment):
 
         # Trajectory log (list[TrajectoryStep]) — filled during step()
         self._trajectory: list[TrajectoryStep] = []
+        self.task_name: str = self.trace.task_name
 
     # ------------------------------------------------------------------
     # OpenEnv Public Interface

@@ -92,39 +92,34 @@ TASKS: List[Dict[str, Any]] = [
 ]
 
 # ---------------------------------------------------------------------------
-# Structured log helpers — DO NOT alter tag names or field names
+# Structured log helpers — MANDATORY FORMAT (DO NOT USE JSON)
 # ---------------------------------------------------------------------------
 
-def _emit(tag: str, payload: Dict[str, Any]) -> None:
-    print(f"{tag} {json.dumps(payload, default=str)}", flush=True)
+BENCHMARK = "kubecost-gym"
+
+def log_start(task_name: str, model: str) -> None:
+    # Format: [START] task=<task_name> env=<benchmark> model=<model_name>
+    print(f"[START] task={task_name} env={BENCHMARK} model={model}", flush=True)
 
 
-def log_start(task_name: str, model: str, max_steps: int) -> None:
-    _emit("[START]", {"task": task_name, "model": model, "max_steps": max_steps})
+def log_step(step: int, action: str, reward: float, done: bool) -> None:
+    # Format: [STEP] step=<n> action=<action_str> reward=<0.00> done=<true|false> error=<msg|null>
+    done_val = str(done).lower()
+    print(
+        f"[STEP] step={step} action={action} reward={reward:.2f} done={done_val} error=null",
+        flush=True,
+    )
 
 
-def log_step(task_name: str, step: int, action: str,
-             reward: float, done: bool, obs: Observation) -> None:
-    obs_dict = obs.model_dump()
-    nsc = obs_dict.get("node_size_class")
-    obs_dict["node_size_class"] = nsc.value if hasattr(nsc, "value") else str(nsc)
-    _emit("[STEP]", {
-        "task":   task_name,
-        "step":   step,
-        "action": action,
-        "reward": round(float(reward), 4),
-        "done":   bool(done),
-        "obs":    obs_dict,
-    })
+def log_end(success: bool, steps: int, score: float, rewards: List[float]) -> None:
+    # Format: [END] success=<true|false> steps=<n> score=<score> rewards=<r1,r2,...,rn>
+    rewards_str = ",".join(f"{r:.2f}" for r in rewards)
+    success_val = str(success).lower()
+    print(
+        f"[END] success={success_val} steps={steps} score={score:.3f} rewards={rewards_str}",
+        flush=True,
+    )
 
-
-def log_end(task_name: str, score: float, total_steps: int, status: str) -> None:
-    _emit("[END]", {
-        "task":        task_name,
-        "score":       round(float(score), 4),
-        "total_steps": total_steps,
-        "status":      status,
-    })
 
 
 # ---------------------------------------------------------------------------
@@ -256,11 +251,12 @@ class CostOptimizerAgent:
         grader      = task["grader"]
         trace_path  = task["trace"]
 
-        log_start(task_name, self.model_name, MAX_STEPS_PER_TASK)
+        log_start(task_name, self.model_name)
 
         total_steps = 0
         score       = 0.0
-        status      = "success"
+        rewards     = []
+        success     = False
 
         try:
             env = KubeCostEnv(trace_path)
@@ -270,21 +266,24 @@ class CostOptimizerAgent:
                 action = self.decide(obs, description)
                 obs, reward, done, _info = env.step(action)
                 total_steps = step_num
-                log_step(task_name, step_num, action.action_type.value,
-                         reward, done, obs)
+                rewards.append(float(reward))
+                
+                log_step(step_num, action.action_type.value, reward, done)
+                
                 if done:
                     break
 
             score = grader.grade(env.trajectory)
             score = max(0.0, min(1.0, score))
+            success = score >= 0.1 # Standard success threshold
 
         except Exception as exc:
             print(f"[ERROR] Task '{task_name}' failed: {exc}",
                   file=sys.stderr, flush=True)
-            status = "error"
-            score  = 0.0
+            score   = 0.0
+            success = False
 
-        log_end(task_name, score, total_steps, status)
+        log_end(success, total_steps, score, rewards)
         return score
 
 
@@ -310,13 +309,6 @@ def main() -> None:
         print("[ERROR] Or for testing: set HF_TOKEN=dummy-token", file=sys.stderr)
         sys.exit(1)
     
-    api_url = os.environ.get('API_BASE_URL', 'https://api.openai.com/v1')
-    model = os.environ.get('MODEL_NAME', 'mistralai/Mistral-7B-Instruct-v0.2')
-    
-    print(f"[INFO] API_BASE_URL : {api_url}", flush=True)
-    print(f"[INFO] MODEL_NAME   : {model}", flush=True)
-    print(f"[INFO] HF_TOKEN     : {'*' * 8} (hidden)", flush=True)
-
     try:
         agent = CostOptimizerAgent()
     except Exception as exc:
@@ -327,15 +319,15 @@ def main() -> None:
     for task in TASKS:
         results[task["name"]] = agent.run_task(task)
 
-    print("\n" + "=" * 60, flush=True)
-    print("INFERENCE RESULTS SUMMARY", flush=True)
-    print("=" * 60, flush=True)
+    print("\n" + "=" * 60, file=sys.stderr, flush=True)
+    print("INFERENCE RESULTS SUMMARY", file=sys.stderr, flush=True)
+    print("=" * 60, file=sys.stderr, flush=True)
     for name, score in results.items():
         flag = "PASS" if 0.0 <= score <= 1.0 else "FAIL"
-        print(f"  [{flag}] {name}: {score:.4f}", flush=True)
+        print(f"  [{flag}] {name}: {score:.4f}", file=sys.stderr, flush=True)
     avg = sum(results.values()) / len(results) if results else 0.0
-    print(f"\n  Average score : {avg:.4f}", flush=True)
-    print("=" * 60, flush=True)
+    print(f"\n  Average score : {avg:.4f}", file=sys.stderr, flush=True)
+    print("=" * 60, file=sys.stderr, flush=True)
     sys.exit(0)
 
 

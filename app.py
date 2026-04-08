@@ -1,62 +1,114 @@
 # app.py
 # KubeCost-Gym HTTP API Server (OpenEnv Standard)
-# Automated REST interface using openenv-core generator
+# Explicit implementation to ensure full protocol compliance and bypass library bugs.
 
 import logging
 import os
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
-from openenv.core import create_fastapi_app
+from fastapi import FastAPI, Body, HTTPException
 from env import KubeCostEnv
-from models import Action, Observation
+from models import Action, Observation, ActionType, EnvState
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
-# ===== OpenEnv Environment Factory =====
+# Initialize FastAPI app directly
+app = FastAPI(title="KubeCost-Gym OpenEnv API")
 
-def create_env(**kwargs) -> KubeCostEnv:
+# Initialize environment state
+app.state.env = None
+
+def get_env(task_name: Optional[str] = None, trace_path: Optional[str] = None) -> KubeCostEnv:
+    """Helper to get or create environment."""
+    if trace_path is None:
+        trace_path = "traces/trace_v1_coldstart.json"
+        if task_name == "efficient_squeeze":
+            trace_path = "traces/trace_v1_squeeze.json"
+        elif task_name == "entropy_storm":
+            trace_path = "traces/trace_v1_entropy.json"
+            
+    if app.state.env is None or app.state.env.trace_path != trace_path:
+        logger.info(f"Creating KubeCostEnv session [task={task_name}, trace={trace_path}]")
+        app.state.env = KubeCostEnv(trace_path=trace_path)
+    return app.state.env
+
+@app.post("/reset")
+async def reset(payload: Dict[str, Any] = Body(default={})):
     """
-    Factory function for KubeCostEnv instances.
-    Handles task_name and trace_path overrides from the REST API.
+    Reset environment to initial state.
+    Returns: {"observation": {...}, "reward": 0.0, "done": false, "task_name": "..."}
     """
-    # Use default trace path
-    trace_path = kwargs.get("trace_path", "traces/trace_v1_coldstart.json")
+    task_name = payload.get("task_name")
+    trace_path = payload.get("trace_path")
     
-    # Map task names to traces (dashboard/validator standard)
-    task_name = kwargs.get("task_name")
-    if task_name == "efficient_squeeze":
-        trace_path = "traces/trace_v1_squeeze.json"
-    elif task_name == "entropy_storm":
-        trace_path = "traces/trace_v1_entropy.json"
+    env = get_env(task_name=task_name, trace_path=trace_path)
+    obs = env.reset()
+    
+    return {
+        "observation": obs.model_dump(),
+        "reward": 0.0,
+        "done": False,
+        "task_name": env.task_name
+    }
+
+@app.post("/step")
+async def step(payload: Dict[str, Any] = Body(...)):
+    """
+    Execute action. Handles both flat and nested 'action' field.
+    """
+    if app.state.env is None:
+        get_env().reset()
         
-    logger.info(f"Creating KubeCostEnv session [task={task_name}, trace={trace_path}]")
-    env = KubeCostEnv(trace_path=trace_path)
-    return env
+    # Standard OpenEnv often nests action in an "action" field
+    action_data = payload.get("action", payload)
+    
+    try:
+        # If action_data is just a string (the action type value)
+        if isinstance(action_data, str):
+            action = Action(action_type=ActionType(action_data))
+        # If action_data is a dict containing action_type
+        elif isinstance(action_data, dict) and "action_type" in action_data:
+            action = Action(**action_data)
+        else:
+            # Fallback for unexpected formats
+            raise ValueError(f"Invalid action format: {action_data}")
+            
+        obs, reward, done, info = app.state.env.step(action)
+        
+        return {
+            "observation": obs.model_dump(),
+            "reward": float(reward),
+            "done": bool(done),
+            "task_name": app.state.env.task_name,
+            "info": info
+        }
+    except Exception as e:
+        logger.error(f"Step failed: {e}")
+        raise HTTPException(status_code=422, detail=str(e))
 
-# ===== FastAPI App Initialization =====
+@app.get("/state")
+async def state():
+    """Get current environment state."""
+    if app.state.env is None:
+        get_env().reset()
+    
+    state_obj = app.state.env.state()
+    # Ensure it returns a dict as expected by FastAPI JSONResponse
+    return state_obj.model_dump()
 
-# Create FastAPI app with automatic REST API generator.
-# This ensures that /reset returns a flat Observation object at the root,
-# which is essential for validator protocol compliance.
-app = create_fastapi_app(
-    env=create_env,
-    action_cls=Action,
-    observation_cls=Observation,
-    max_concurrent_envs=None,  # Scale to dashboard load
-)
+@app.get("/health")
+async def health():
+    return {"status": "healthy", "env": "kubecost-gym"}
 
-@app.on_event("startup")
-async def startup_event():
-    """Environment health check on startup."""
-    logger.info("KubeCost-Gym server initialization complete.")
-
-if __name__ == "__main__":
-    import uvicorn
-    port = int(os.environ.get("PORT", 7860))
-    host = os.environ.get("SERVER_NAME", "0.0.0.0")
-    uvicorn.run(app, host=host, port=port, log_level="info")
+@app.get("/")
+async def index():
+    return {
+        "name": "KubeCost-Gym",
+        "api": "OpenEnv REST",
+        "compliance": "Deep Check v1.0"
+    }
 
 def main():
     """Uvicorn entry point."""
@@ -64,3 +116,6 @@ def main():
     port = int(os.environ.get("PORT", 7860))
     host = os.environ.get("SERVER_NAME", "0.0.0.0")
     uvicorn.run(app, host=host, port=port, log_level="info")
+
+if __name__ == "__main__":
+    main()
