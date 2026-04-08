@@ -138,19 +138,19 @@ The environment uses deterministic traces augmented by an action-sensitive overl
 **Task 1: Cold Start (Easy)**
 
 - **Metric:** Average HTTP error rate
-- **Score:** `1.0 - avg_error_rate`
+- **Score:** `max(0.1, min(0.9, 1.0 - avg_error_rate))`
 - **Pass:** Score > 0.8
 
 **Task 2: Efficient Squeeze (Medium)**
 
 - **Metric:** CPU steal violations (steal_pct >= 0.20)
-- **Score:** `1.0 - (violations / len(trajectory))`
+- **Score:** `max(0.1, min(0.9, 1.0 - (violations / len(trajectory))))`
 - **Pass:** Score > 0.7
 
 **Task 3: Entropy Storm (Hard)**
 
 - **Metric:** Proactive REBALANCE actions within 2 steps before steal violation
-- **Score:** `proactive_actions / total_violations` (or 0.0 if no violations and passive)
+- **Score:** `max(0.1, min(0.9, proactive_actions / total_violations))` (or 0.1 if no violations / passive)
 - **Pass:** Score > 0.6
 
 See [PROJECT_SPEC.md](PROJECT_SPEC.md) for full scoring formulas.
@@ -173,8 +173,8 @@ uv run pytest tests/ --cov=. --cov-report=html
 
 ### Troubleshooting Common Issues
 
-**Q: Grader returns 0.0 on every episode**
-A: Check that trajectory is non-empty. If still 0.0, ensure observations have valid values. Enable stderr to see error logs.
+**Q: Grader returns 0.1 on every episode**
+A: Check that trajectory is non-empty. If still 0.1, ensure observations have valid values. Enable stderr to see error logs.
 
 **Q: LLM inference hangs**
 A: Check API_BASE_URL is correct and accessible. Default timeout is 30s; increase if needed.
@@ -289,13 +289,13 @@ hf_token = "hf_abc123..."  # ← DISQUALIFIED
 
 ### ✓ Grader Output Bounds (Must Pass)
 
-All graders must return scores strictly in [0.0, 1.0]:
+All graders must return scores strictly in [0.1, 0.9]:
 
 ```python
 # ✓ CORRECT (clamped)
 def grade(self, trajectory):
     score = calculate_score(trajectory)
-    return max(0.0, min(1.0, score))  # ← Always clamp
+    return max(0.1, min(0.9, score))  # ← Always clamp to [0.1, 0.9]
 
 # ✗ WRONG (unbounded)
 def grade(self, trajectory):
@@ -308,9 +308,9 @@ def grade(self, trajectory):
 
 **Double-check in graders.py:**
 
-- `ColdStartGrader.grade()` returns [0.0, 1.0]
-- `EfficientSqueezeGrader.grade()` returns [0.0, 1.0]
-- `EntropyStormGrader.grade()` returns [0.0, 1.0]
+- `ColdStartGrader.grade()` returns [0.1, 0.9]
+- `EfficientSqueezeGrader.grade()` returns [0.1, 0.9]
+- `EntropyStormGrader.grade()` returns [0.1, 0.9]
 
 ### ✓ OpenAI Client Usage (Must Pass)
 
@@ -505,7 +505,7 @@ This project implements all 5 SDD phases:
 - Normalized: score = 1.0 - (violations / len(trajectory))
 - No unbounded accumulation (never -= 0.05)
 - Float tolerance: use < 0.001, never == 0.0
-- Clamp: max(0.0, min(1.0, raw_score))
+- Clamp: max(0.1, min(0.9, raw_score))
 
 ### Phase 5: Infrastructure Specification
 
@@ -528,7 +528,7 @@ This validates the critical gates:
 
 - ✓ All modules import without syntax errors
 - ✓ openenv.yaml parses and has required fields (3 tasks)
-- ✓ All graders enforce [0.0, 1.0] bounds
+- ✓ All graders enforce [0.1, 0.9] bounds
 - ✓ Environment variables use `os.environ.get()`
 - ✓ OpenAI Client imported (not Google Gemini)
 - ✓ inference.py exists in root directory
@@ -561,7 +561,7 @@ This implementation incorporates all 5 audit fixes from the specification:
 | ------------------------------------- | ----------------------- | ------------------------------------------------- |
 | inference.py in subdirectory          | **DISQUALIFIED**        | Keep in root, never move                          |
 | Hardcoded API key/token               | **DISQUALIFIED**        | Always use `os.environ.get(key)`                  |
-| Grader score > 1.0 or < 0.0           | **DISQUALIFIED**        | Normalize by trajectory length + clamp            |
+| Grader score > 0.9 or < 0.1           | **DISQUALIFIED**        | Normalize by trajectory length + clamp (0.1, 0.9) |
 | Using Google Gemini instead of OpenAI | **DISQUALIFIED**        | `from openai import OpenAI`                       |
 | Wrong environment variable names      | **DISQUALIFIED**        | Must be `API_BASE_URL`, `MODEL_NAME`, `HF_TOKEN`  |
 | Float equality `== 0.0`               | Fails edge cases        | Use `< tolerance` always                          |
@@ -586,7 +586,7 @@ This implementation incorporates all 5 audit fixes from the specification:
 
 1. **Specification first** — Each phase (Domain → Contract → Reward → Grader → Infra) completed before implementation
 2. **Type safety** — Pydantic models prevent spec violations at runtime
-3. **Normalization** — All graders return [0.0, 1.0] regardless of trajectory length
+3. **Normalization** — All graders return strictly (0.0, 1.0) regardless of trajectory length
 4. **No sparse cliffs** — Every hard reward threshold has a gradient ramp
 5. **Solvability proof** — Every task (especially hard) verified achievable by available actions
 6. **Reproducibility** — Deterministic traces, no RNG, ensures consistent evaluation

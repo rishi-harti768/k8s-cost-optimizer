@@ -5,9 +5,9 @@ Grader implementations (Phase 4: Grader Spec).
 Phase 4 Implementation: Final scoring logic. All grade() stubs replaced with live logic.
 
 Rules enforced across every grader:
-  1. Empty trajectory  → return 0.0 explicitly (never divide by zero).
-  2. Normalized output → score invariant to trajectory length.
-  3. Hard bounds       → final return is always max(0.0, min(1.0, score)).
+   1. Empty trajectory  → return 0.1 explicitly (never divide by zero).
+   2. Normalized output → score invariant to trajectory length.
+   3. Hard bounds       → final return is always max(0.1, min(0.9, score)).
   4. Float tolerance   → thresholds use >= / < never ==.
 
 Reference: PROJECT_SPEC.md §3 Phase 4 Grader Spec, §5 Audit Fixes, §6 The Three Tasks
@@ -72,8 +72,8 @@ def is_warning_zone(p99_ms: float) -> bool:
 
 
 def uptime_score(p99_ms: float) -> float:
-    """Return 1.0 if healthy, 0.0 if breach."""
-    return 1.0 if p99_ms < _CONFIG.SLA_THRESHOLD_MS else 0.0
+    """Return 0.9 if healthy, 0.1 if breach."""
+    return 0.9 if p99_ms < _CONFIG.SLA_THRESHOLD_MS else 0.1
 
 
 def steal_violation(steal_pct: float, threshold: float | None = None) -> bool:
@@ -99,7 +99,7 @@ class ColdStartGrader:
     Formula:
         avg_error_rate = mean(http_error_rate for each step)
         score          = 1.0 - avg_error_rate
-        final_score    = max(0.0, min(1.0, score))
+        final_score    = max(0.1, min(0.9, score))
 
     Normalization:
         Uses the *average* error rate — length-invariant by construction.
@@ -107,7 +107,7 @@ class ColdStartGrader:
         produce the same score.
 
     Edge case:
-        Empty trajectory → return 0.0 explicitly.
+        Empty trajectory → return 0.1 explicitly.
 
     Reference:
         PROJECT_SPEC.md §6 Task 1 Cold Start
@@ -124,14 +124,14 @@ class ColdStartGrader:
             trajectory: List of TrajectoryStep instances from the episode.
 
         Returns:
-            float: Score in [0.0, 1.0].
-                   1.0 = zero errors throughout.
-                   0.0 = 100% error rate throughout (or empty).
+            float: Score in [0.1, 0.9].
+                   0.9 = zero errors throughout.
+                   0.1 = 100% error rate throughout (or empty).
         """
         # Edge case: empty trajectory
         if not trajectory:
             logger.warning("ColdStartGrader: received empty trajectory")
-            return 0.01
+            return 0.1
 
         # Collect http_error_rate from every step's observation
         total_error = sum(step.observation.http_error_rate for step in trajectory)
@@ -142,8 +142,8 @@ class ColdStartGrader:
         # Score: perfect uptime = 1.0, total failure = 0.0
         score = 1.0 - avg_error_rate
 
-        # Hard clamp — mathematically cannot exceed [0.0, 1.0] but to stay strictly within (0, 1) we use 0.01, 0.99
-        return max(0.01, min(0.99, score))
+        # Hard clamp — mathematically cannot exceed [0.0, 1.0] but to stay strictly within (0, 1) we use 0.1, 0.9
+        return max(0.1, min(0.9, score))
 
 
 class EfficientSqueezeGrader:
@@ -155,14 +155,14 @@ class EfficientSqueezeGrader:
     Formula:
         violations  = count(steps where cpu_steal_pct >= 0.20)
         score       = 1.0 - (violations / len(trajectory))
-        final_score = max(0.0, min(1.0, score))
+        final_score = max(0.1, min(0.9, score))
 
     Normalization:
         Divides by trajectory length → violation *rate* is length-invariant.
         10 violations in 100 steps ≡ 20 violations in 200 steps (same score).
 
     Edge case:
-        Empty trajectory → return 0.0 explicitly.
+        Empty trajectory → return 0.1 explicitly.
 
     Float comparison (Audit Fix 01):
         ✗  cpu_steal_pct == 0.20   (float equality — broken)
@@ -182,14 +182,14 @@ class EfficientSqueezeGrader:
             trajectory: List of TrajectoryStep instances from the episode.
 
         Returns:
-            float: Score in [0.0, 1.0].
-                   1.0 = zero steal violations.
-                   0.0 = every step was a steal violation.
+            float: Score in [0.1, 0.9].
+                   0.9 = zero steal violations.
+                   0.1 = every step was a steal violation.
         """
         # Edge case: empty trajectory
         if not trajectory:
             logger.warning("EfficientSqueezeGrader: received empty trajectory")
-            return 0.01
+            return 0.1
 
         # Count steps where steal crossed the threshold
         violations = sum(
@@ -202,7 +202,7 @@ class EfficientSqueezeGrader:
         score = 1.0 - (violations / len(trajectory))
 
         # Hard clamp
-        return max(0.01, min(0.99, score))
+        return max(0.1, min(0.9, score))
 
 
 class EntropyStormGrader:
@@ -214,13 +214,13 @@ class EntropyStormGrader:
 
     Algorithm:
         1. Identify every violation step  (cpu_steal_pct >= 0.20).
-        2. If no violations ever occur    → return 0.0  (passive agent).
+        2. If no violations ever occur    → return 0.1  (passive agent).
         3. For each violation at index i:
                Look back through steps [max(0, i − LOOKBACK_WINDOW), i − 1].
                If any step in that window took action REBALANCE_NODE:
                    proactive_actions += 1
         4. Score: `proactive_actions / total_violations`
-           final_score = max(0.0, min(1.0, success_rate))
+           final_score = max(0.1, min(0.9, success_rate))
 
     Lookback window:
         Default = 5 steps. The agent must act within 5 steps before the
@@ -232,8 +232,8 @@ class EntropyStormGrader:
         the trace is 10 steps or 1000 steps long.
 
     Special cases:
-        Empty trajectory         → 0.0
-        Zero violations          → 0.0  (inaction on hard task is not rewarded)
+        Empty trajectory         → 0.1
+        Zero violations          → 0.1  (inaction on hard task is not rewarded)
 
     Reference:
         PROJECT_SPEC.md §6 Task 3 Entropy Storm
@@ -249,14 +249,14 @@ class EntropyStormGrader:
             trajectory: List of TrajectoryStep instances from the episode.
 
         Returns:
-            float: Score in [0.0, 1.0].
-                   1.0 = all violations predicted (or actively prevented via REBALANCE).
-                   0.0 = no proactive actions before any violation.
+            float: Score in [0.1, 0.9].
+                   0.9 = all violations predicted (or actively prevented via REBALANCE).
+                   0.1 = no proactive actions before any violation.
         """
         # Edge case: empty trajectory
         if not trajectory:
             logger.warning("EntropyStormGrader: received empty trajectory")
-            return 0.01
+            return 0.1
 
         # Step 1: Find all violation indices
         violation_indices = [
@@ -268,7 +268,7 @@ class EntropyStormGrader:
         # Special case: zero violations
         if not violation_indices:
             # No violations means there was no observed breach to credit.
-            return 0.01
+            return 0.1
 
         total_violations = len(violation_indices)
         proactive_actions = 0
@@ -302,4 +302,4 @@ class EntropyStormGrader:
         success_rate = proactive_actions / total_violations
 
         # Hard clamp
-        return max(0.01, min(0.99, success_rate))
+        return max(0.1, min(0.9, success_rate))

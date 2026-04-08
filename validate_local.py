@@ -175,13 +175,13 @@ def check_graders() -> bool:
             EntropyStormGrader(),
         ]
 
-        # 1. Test empty trajectory returns 0.0 (SDD Rule 1)
+        # 1. Test empty trajectory returns 0.01
         empty_traj = []
         for grader in graders:
             score = grader.grade(empty_traj)
-            if score != 0.0:
+            if score != 0.1:
                 raise ValidationError(
-                    f"{grader.__class__.__name__}: empty trajectory should return 0.0, got {score}"
+                    f"{grader.__class__.__name__}: empty trajectory should return 0.1, got {score}"
                 )
 
         # 2. Test healthy trajectory
@@ -208,19 +208,18 @@ def check_graders() -> bool:
 
         for grader in graders:
             score = grader.grade(healthy_traj)
-            if not isinstance(score, float) or not (0.0 <= score <= 1.0):
+            if not isinstance(score, float) or not (0.1 <= score <= 0.9):
                 raise ValidationError(
-                    f"{grader.__class__.__name__}: score {score} out of range [0.0, 1.0]"
+                    f"{grader.__class__.__name__}: score {score} out of range [0.1, 0.9]"
                 )
 
-            # EntropyStorm specifics - If no violations, returns 1.0 only if REBALANCE_NODE actions exist
+            # EntropyStorm specifics - If no violations, returns 0.99 only if REBALANCE_NODE actions exist
             if grader.__class__.__name__ == "EntropyStormGrader":
-                # In a healthy trajectory with no violations, the grader may return 0.0
-                # (passive/no action) or 1.0 (active REBALANCE_NODE). Both are valid.
-                if score not in (0.0, 1.0):
+                # In a healthy trajectory with no violations, the grader returns 0.1
+                if score not in (0.1, 0.9):
                     raise ValidationError(
                         f"{grader.__class__.__name__}: score {score} unexpected "
-                        f"for healthy trajectory (expect 0.0 or 1.0)"
+                        f"for healthy trajectory (expect 0.1 or 0.9)"
                     )
 
             logger.info(f"  [PASS] {grader.__class__.__name__}: score={score:.2f}")

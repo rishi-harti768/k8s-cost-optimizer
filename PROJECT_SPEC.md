@@ -31,7 +31,7 @@ All submitted environments must implement this interface:
 | `step(action)` | `(Action) → (Obs, float, bool, dict)` | 4-tuple; reward is float; done is bool   | Stub returns None                            |
 | `state()`      | `() → typed model or dict`            | Non-null, serializable                   | Returns untyped dict                         |
 | `openenv.yaml` | name, version, description, tasks[]   | YAML parses; required keys present       | Missing task difficulty                      |
-| `graders`      | `(trajectory) → float`                | Returns [0.0, 1.0]                       | Score > 1.0                                  |
+| `graders`      | (trajectory) → float                | Returns [0.1, 0.9]                       | Score > 0.9                                  |
 | `inference.py` | Root directory; uses env vars         | File exists, runs cleanly, <20 min       | In subdirectory                              |
 | `README.md`    | HF Space frontmatter                  | hardware tag, sdk: docker, tags: openenv | hardware: cpu-upgrade (violates 2vCPU limit) |
 
@@ -162,7 +162,7 @@ Where:
 
 ### Phase 4: Grader Specification
 
-**Goal:** Specify normalized scoring functions that always return 0.0–1.0.
+**Goal:** Specify normalized scoring functions that always return strictly between 0.1 and 0.9.
 
 **Critical Rules:**
 
@@ -175,8 +175,8 @@ Where:
    - ✓ `error_rate < 0.001`
 
 3. **Edge cases:**
-   - Empty trajectory: return 0.0 explicitly
-   - Final clamp: `max(0.0, min(1.0, raw_score))`
+   - Empty trajectory: return 0.1 explicitly
+   - Final clamp: `max(0.1, min(0.9, raw_score))`
 
 **Example:**
 
@@ -184,13 +184,13 @@ Where:
 class EfficientSqueezeGrader:
     def grade(self, trajectory: list) -> float:
         if not trajectory:
-            return 0.0
+            return 0.1
         violations = sum(
             1 for step in trajectory
             if step["observation"].cpu_steal_pct >= 0.01
         )
         score = 1.0 - (violations / len(trajectory))
-        return max(0.0, min(1.0, score))
+        return max(0.1, min(0.9, score))
 ```
 
 ### Phase 5: Infrastructure Specification
@@ -348,7 +348,7 @@ Returns typed `EnvState` model:
 - [ ] `inference.py` runs end-to-end in <20 minutes
 - [ ] `openenv.yaml` parses without error; has name, version, description, tasks[]
 - [ ] Each task has name, difficulty (easy/medium/hard), description
-- [ ] All 3 graders return float in [0.0, 1.0]
+- [ ] All 3 graders return float in [0.1, 0.9] exclusively
 - [ ] README.md has `hardware: cpu-basic`, `sdk: docker`, `tags: - openenv`
 
 ### Spec Compliance Checks
@@ -356,7 +356,7 @@ Returns typed `EnvState` model:
 - [ ] No stub bodies (`pass`) remain in `env.py`
 - [ ] `state()` returns typed Pydantic model, not bare dict
 - [ ] No float equality (`== 0.0`) — all replaced with tolerance checks
-- [ ] All graders handle empty trajectory: `if not trajectory: return 0.0`
+- [ ] All graders handle empty trajectory: `if not trajectory: return 0.1`
 - [ ] Reward function has no cliff at SLA threshold — ramp present
 - [ ] Every hard task is solvable by at least one action sequence
 
@@ -374,7 +374,7 @@ Returns typed `EnvState` model:
 | Mistake                     | Why It Fails                                      | Prevention                                                              |
 | --------------------------- | ------------------------------------------------- | ----------------------------------------------------------------------- |
 | Stubs left as `pass`        | `step()` returns None; tuple unpacking crashes    | Search for `pass`; all bodies must return correct type                  |
-| Grader score > 1.0          | Unbounded accumulation; validator rejects         | Always normalize by `len(trajectory)`; clamp with `max(0, min(1, raw))` |
+| Grader score >= 1.0         | Unbounded accumulation; validator rejects         | Always normalize by `len(trajectory)`; clamp with `max(0.1, min(0.9, raw))` |
 | Wrong hardware tag          | `cpu-upgrade` exceeds 2 vCPU limit                | Use `hardware: cpu-basic` exclusively                                   |
 | inference.py not in root    | Validator looks for `./inference.py` specifically | Never move to subdirectory                                              |
 | Float equality              | Floating point never equals exact zero            | Replace `== 0.0` with `< 1e-3`                                          |
@@ -417,7 +417,7 @@ Step 3: Write reward formula as math, THEN implement
 
 Step 4: Write grader formulas as math, THEN implement
   - Normalize by len(trajectory)
-  - Final clamp: max(0.0, min(1.0, raw))
+  - Final clamp: max(0.1, min(0.9, raw))
   - Test: empty, all violations, no violations
 
 Step 5: Implement environment body (no stubs)
@@ -467,11 +467,11 @@ def validate():
     assert isinstance(reward, float)
     assert isinstance(done, bool)
 
-    # 4. All graders return [0.0, 1.0]
+    # 4. All graders return (0.1, 0.9)
     trajectory = [{"observation": obs2, "uptime_metric": 1.0, "cost_metric": 0.8}]
     for grader in [ColdStartGrader(), EfficientSqueezeGrader(), EntropyStormGrader()]:
         score = grader.grade(trajectory)
-        assert 0.0 <= score <= 1.0, f"{grader.__class__.__name__}: score={score} out of range"
+        assert 0.1 <= score <= 0.9, f"{grader.__class__.__name__}: score={score} out of range"
         print(f"  {grader.__class__.__name__}: {score:.3f} ✓")
 
     print("All validation checks passed.")
@@ -485,7 +485,7 @@ if __name__ == "__main__":
 ## 12. Key Takeaways
 
 1. **Specification comes first** — Domain, Contract, Reward, Grader, Infra. Write each spec before implementing.
-2. **Normalize everything** — Graders must return [0.0, 1.0] regardless of trajectory length.
+2. **Normalize everything** — Graders must return [0.1, 0.9] regardless of trajectory length.
 3. **No sparse cliffs in rewards** — Every hard threshold needs a gradient ramp.
 4. **Contract prevents bugs** — Pydantic models with Field() constraints catch spec violations at runtime.
 5. **Task design matters most** — Judges value genuine difficulty progression and proactive reasoning.

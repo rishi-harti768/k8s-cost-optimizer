@@ -2,7 +2,7 @@
 Comprehensive grader tests (Fix #17).
 
 Tests that graders:
-1. Return values in [0.0, 1.0]
+1. Return values in [0.1, 0.9]
 2. Handle edge cases (empty trajectories, all violations)
 3. Are properly normalized (length-invariant)
 4. Prevent passive agents from scoring perfectly
@@ -75,18 +75,18 @@ class TestColdStartGrader:
     """Test Cold Start grader (Task 1)."""
 
     def test_empty_trajectory(self):
-        """Empty trajectory should return 0.0."""
+        """Empty trajectory should return 0.1."""
         grader = ColdStartGrader()
-        assert grader.grade([]) == 0.01
+        assert grader.grade([]) == 0.1
 
     def test_perfect_no_errors(self, dummy_step):
-        """Zero errors should return 1.0."""
+        """Zero errors should return 0.9."""
         grader = ColdStartGrader()
         trajectory = [dummy_step] * 5
-        assert grader.grade(trajectory) == 0.99
+        assert grader.grade(trajectory) == 0.9
 
     def test_all_errors(self, dummy_observation):
-        """100% error rate should return 0.0."""
+        """100% error rate should return 0.1."""
         grader = ColdStartGrader()
         obs_with_errors = Observation(
             cpu_usage_pct=45.0,
@@ -108,7 +108,7 @@ class TestColdStartGrader:
             info={},
         )
         trajectory = [step] * 5
-        assert grader.grade(trajectory) == 0.01
+        assert grader.grade(trajectory) == 0.1
 
     def test_partial_errors(self, dummy_observation):
         """50% error rate should return 0.5."""
@@ -210,18 +210,18 @@ class TestEfficientSqueezeGrader:
     """Test Efficient Squeeze grader (Task 2)."""
 
     def test_empty_trajectory(self):
-        """Empty trajectory should return 0.0."""
+        """Empty trajectory should return 0.1."""
         grader = EfficientSqueezeGrader()
-        assert grader.grade([]) == 0.01
+        assert grader.grade([]) == 0.1
 
     def test_no_violations(self, dummy_step):
-        """No violations should return 1.0."""
+        """No violations should return 0.9."""
         grader = EfficientSqueezeGrader()
         trajectory = [dummy_step] * 5  # All have steal < 0.20
-        assert grader.grade(trajectory) == 0.99
+        assert grader.grade(trajectory) == 0.9
 
     def test_all_violations(self, dummy_observation):
-        """All violations should return 0.0."""
+        """All violations should return 0.1."""
         grader = EfficientSqueezeGrader()
         obs_violation = Observation(
             cpu_usage_pct=45.0,
@@ -243,7 +243,7 @@ class TestEfficientSqueezeGrader:
             info={},
         )
         trajectory = [step] * 5
-        assert grader.grade(trajectory) == 0.01
+        assert grader.grade(trajectory) == 0.1
 
     def test_partial_violations(self, dummy_step):
         """Half violations should return ~0.5."""
@@ -276,9 +276,9 @@ class TestEntropyStormGrader:
     """Test Entropy Storm grader (Task 3)."""
 
     def test_empty_trajectory(self):
-        """Empty trajectory should return 0.0."""
+        """Empty trajectory should return 0.1."""
         grader = EntropyStormGrader()
-        assert grader.grade([]) == 0.01
+        assert grader.grade([]) == 0.1
 
     def test_no_violations_with_rebalance(self, dummy_step):
         """Clean trace with no violations should not reward REBALANCE spam."""
@@ -291,16 +291,16 @@ class TestEntropyStormGrader:
             info={},
         )
         trajectory = [rebalance_step, dummy_step, dummy_step]
-        assert grader.grade(trajectory) == 0.01
+        assert grader.grade(trajectory) == 0.1
 
     def test_no_violations_no_rebalance(self, dummy_step):
-        """No violations and no REBALANCE should return 0.0."""
+        """No violations and no REBALANCE should return 0.1."""
         grader = EntropyStormGrader()
         trajectory = [dummy_step] * 3  # All maintain, no violations
-        assert grader.grade(trajectory) == 0.01
+        assert grader.grade(trajectory) == 0.1
 
     def test_violation_with_proactive_rebalance(self, dummy_step):
-        """Violation preceded by REBALANCE on a rising steal signal should score 1.0."""
+        """Violation preceded by REBALANCE on a rising steal signal should score 0.9."""
         grader = EntropyStormGrader()
         obs_rebalance = Observation(
             cpu_usage_pct=45.0,
@@ -344,10 +344,10 @@ class TestEntropyStormGrader:
         # REBALANCE 1 step before violation on rising steal
         trajectory = [dummy_step, rebalance_step, violation_step]
         score = grader.grade(trajectory)
-        assert score == 0.99, "Should detect proactive REBALANCE within lookback window"
+        assert score == 0.9, "Should detect proactive REBALANCE within lookback window"
 
     def test_violation_without_proactive_rebalance(self, dummy_step):
-        """Violation without preceding REBALANCE should return 0.0."""
+        """Violation without preceding REBALANCE should return 0.1."""
         grader = EntropyStormGrader()
         obs_violation = Observation(
             cpu_usage_pct=45.0,
@@ -371,19 +371,19 @@ class TestEntropyStormGrader:
 
         trajectory = [dummy_step, dummy_step, violation_step]
         score = grader.grade(trajectory)
-        assert score == 0.01, "Should fail to detect proactive action"
+        assert score == 0.1, "Should fail to detect proactive action"
 
 
 class TestGraderBounds:
-    """Test all graders produce scores in [0.0, 1.0]."""
+    """Test all graders produce scores in [0.1, 0.9]."""
 
     def test_all_graders_clamp_output(self, dummy_step):
-        """All graders should clamp output to [0.0, 1.0]."""
+        """All graders should clamp output to strictly [0.1, 0.9]."""
         graders = [ColdStartGrader(), EfficientSqueezeGrader(), EntropyStormGrader()]
 
         trajectory = [dummy_step] * 10
         for grader in graders:
             score = grader.grade(trajectory)
-            assert 0.01 <= score <= 0.99, (
+            assert 0.1 <= score <= 0.9, (
                 f"{grader.__class__.__name__} returned {score} out of bounds"
             )
