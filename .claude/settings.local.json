@@ -22,7 +22,10 @@
       "Bash(python -c \"import openenv; print\\('openenv available'\\)\")",
       "Bash(python:*)",
       "Bash(uv export:*)",
-      "Bash(echo \"Exit code: $? \\(FAILURE\\)\")"
+      "Bash(echo \"Exit code: $? \\(FAILURE\\)\")",
+      "Bash(python3 -m pip install openenv-core)",
+      "Bash(python3:*)",
+      "Bash(grep -r \"import gradio\\\\|from gradio\" *.py)"
     ]
   }
 }

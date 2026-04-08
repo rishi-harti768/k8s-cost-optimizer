@@ -24,14 +24,46 @@ import sys
 from typing import List, Dict, Any
 from pathlib import Path
 
+import subprocess
+
+def _self_heal():
+    """Attempt to install missing dependencies and print diagnostics."""
+    print(f"--- DIAGNOSTICS ---", file=sys.stderr)
+    print(f"Python: {sys.version}", file=sys.stderr)
+    print(f"CWD: {os.getcwd()}", file=sys.stderr)
+    print(f"PATH: {sys.path}", file=sys.stderr)
+    try:
+        print("Attempting self-healing (pip install openenv-core)...", file=sys.stderr)
+        subprocess.run([sys.executable, "-m", "pip", "install", "openenv-core"], check=True, capture_output=True)
+        print("Self-healing successful.", file=sys.stderr)
+    except Exception as e:
+        print(f"Self-healing failed: {e}", file=sys.stderr)
+    
+    try:
+        print("--- PIP LIST ---", file=sys.stderr)
+        res = subprocess.run([sys.executable, "-m", "pip", "list"], capture_output=True, text=True)
+        print(res.stdout, file=sys.stderr)
+    except Exception:
+        pass
+
 try:
     from env import KubeCostEnv
     from graders import ColdStartGrader, EfficientSqueezeGrader, EntropyStormGrader
     from models import Observation, Action, ActionType
 except ModuleNotFoundError as e:
-    print(f"[ERROR] Failed to import required module: {e}", file=sys.stderr, flush=True)
-    print(f"[ERROR] Make sure all dependencies are installed: pip install -r requirements.txt", file=sys.stderr, flush=True)
-    sys.exit(1)
+    if "openenv" in str(e):
+        _self_heal()
+        try:
+            from env import KubeCostEnv
+            from graders import ColdStartGrader, EfficientSqueezeGrader, EntropyStormGrader
+            from models import Observation, Action, ActionType
+        except ModuleNotFoundError as e2:
+            print(f"[ERROR] Still failed to import after self-healing: {e2}", file=sys.stderr, flush=True)
+            sys.exit(1)
+    else:
+        print(f"[ERROR] Failed to import required module: {e}", file=sys.stderr, flush=True)
+        print(f"[ERROR] Make sure all dependencies are installed: pip install -r requirements.txt", file=sys.stderr, flush=True)
+        sys.exit(1)
 except Exception as e:
     print(f"[ERROR] Failed to import modules: {e}", file=sys.stderr, flush=True)
     sys.exit(1)
