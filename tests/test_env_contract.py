@@ -1,6 +1,6 @@
 import pytest
 
-from env import KubeCostEnv
+from server.k8s_cost_optimizer_environment import K8sCostOptimizerEnvironment as KubeCostEnv
 from graders import ColdStartGrader, EfficientSqueezeGrader, EntropyStormGrader
 from models import Action, ActionType, EnvState, Observation
 

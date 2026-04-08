@@ -69,7 +69,7 @@ def check_imports() -> bool:
         bool: True if all imports successful, False otherwise.
     """
     try:
-        from env import KubeCostEnv
+        from server.k8s_cost_optimizer_environment import K8sCostOptimizerEnvironment as KubeCostEnv
         from models import (
             Observation,
             EnvState,
@@ -276,7 +276,7 @@ def check_env_structure() -> bool:
         bool: True if all required methods present, False otherwise.
     """
     try:
-        from env import KubeCostEnv
+        from server.k8s_cost_optimizer_environment import K8sCostOptimizerEnvironment as KubeCostEnv
 
         # Check required methods exist
         required_methods = ["reset", "step", "state", "_apply_action", "_calculate_reward"]

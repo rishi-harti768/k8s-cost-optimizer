@@ -1,26 +1,24 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
-name = "k8s-cost-optimizer"
+name = "openenv-k8s_cost_optimizer"
 version = "0.1.0"
-description = "A production-grade RL environment for learning proactive Kubernetes autoscaling strategies using LLMs. Implements the OpenEnv standard with strict Pydantic type validation, deterministic trace-based dynamics, and three progressive difficulty tasks."
+description = "A production-grade RL environment for learning proactive Kubernetes autoscaling strategies using LLMs."
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+    "openenv-core[core]>=0.2.2",
     "fastapi>=0.135.3",
     "gradio>=6.11.0",
     "openai>=2.30.0",
-    "openenv-core[core]>=0.2.2",
     "pydantic>=2.12.5",
     "pyyaml>=6.0.3",
     "uvicorn>=0.42.0",
 ]
 
-[project.scripts]
-# Application entry point - enables running via: uv run kubecost-gym
-# Uses the simpler app.py which has custom endpoints (avoids openenv-core auto-routing bugs)
-kubecost-gym = "app:main"
-server = "app:main"
-
-[dependency-groups]
+[project.optional-dependencies]
 dev = [
     "black>=26.3.1",
     "mypy>=1.20.0",
@@ -28,18 +26,11 @@ dev = [
     "pytest-cov>=7.1.0",
 ]
 
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+[project.scripts]
+server = "k8s_cost_optimizer.server.app:main"
+kubecost-gym = "k8s_cost_optimizer.server.app:main"
 
-[tool.hatch.build.targets.wheel]
-packages = ["server"]
-include = [
-    "env.py",
-    "models.py",
-    "graders.py",
-    "inference.py",
-    "app.py",
-    "openenv.yaml",
-    "traces/",
-]
+[tool.setuptools]
+include-package-data = true
+packages = ["k8s_cost_optimizer", "k8s_cost_optimizer.server"]
+package-dir = { "k8s_cost_optimizer" = ".", "k8s_cost_optimizer.server" = "server" }

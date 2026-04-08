@@ -14,20 +14,33 @@ from pathlib import Path
 from typing import Any, Dict, Tuple, Optional
 from openenv.core import Environment
 
-from models import (
-    Observation,
-    Action,
-    EnvState,
-    ActionType,
-    NodeSizeClass,
-    TrajectoryStep,
-    TraceData,
-    TraceObservation,
-    TraceStep,
-)
+try:
+    from k8s_cost_optimizer.models import (
+        Observation,
+        Action,
+        EnvState,
+        ActionType,
+        NodeSizeClass,
+        TrajectoryStep,
+        TraceData,
+        TraceObservation,
+        TraceStep,
+    )
+except ImportError:
+    from models import (
+        Observation,
+        Action,
+        EnvState,
+        ActionType,
+        NodeSizeClass,
+        TrajectoryStep,
+        TraceData,
+        TraceObservation,
+        TraceStep,
+    )
 
 __all__ = [
-    "KubeCostEnv",
+    "K8sCostOptimizerEnvironment",
     "load_trace",
     "compute_reward",
     "validate_action",
@@ -267,7 +280,7 @@ def get_replica_delta(action_type: ActionType) -> int:
     return scale_map.get(action_type, 0)
 
 
-class KubeCostEnv(Environment):
+class K8sCostOptimizerEnvironment(Environment):
     """Kubernetes cost optimization environment.
 
     Implements OpenEnv interface for RL agents:
@@ -283,7 +296,10 @@ class KubeCostEnv(Environment):
     # Construction
     # ------------------------------------------------------------------
 
-    def __init__(self, trace_path: str) -> None:
+    # Enable concurrent WebSocket sessions.
+    SUPPORTS_CONCURRENT_SESSIONS: bool = False
+
+    def __init__(self, trace_path: str = "traces/trace_v1_coldstart.json") -> None:
         """
         Initialize environment from deterministic trace.
 

@@ -47,14 +47,14 @@ def _self_heal():
         pass
 
 try:
-    from env import KubeCostEnv
+    from server.k8s_cost_optimizer_environment import K8sCostOptimizerEnvironment as KubeCostEnv
     from graders import ColdStartGrader, EfficientSqueezeGrader, EntropyStormGrader
     from models import Observation, Action, ActionType
 except ModuleNotFoundError as e:
     if "openenv" in str(e):
         _self_heal()
         try:
-            from env import KubeCostEnv
+            from server.k8s_cost_optimizer_environment import K8sCostOptimizerEnvironment as KubeCostEnv
             from graders import ColdStartGrader, EfficientSqueezeGrader, EntropyStormGrader
             from models import Observation, Action, ActionType
         except ModuleNotFoundError as e2:
