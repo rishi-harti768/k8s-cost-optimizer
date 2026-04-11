@@ -10,7 +10,6 @@ tags:
   - reinforcement-learning
   - kubernetes
   - cost-optimization
-base_path: /web
 ---
 
 # KubeCost-Gym v3.1: Kubernetes Cost Optimization RL Environment
