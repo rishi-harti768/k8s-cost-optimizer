@@ -2,7 +2,7 @@
 title: k8s_cost_optimizer
 emoji: 🚀
 colorFrom: red
-colorTo: orange
+colorTo: yellow
 sdk: docker
 hardware: cpu-basic
 tags:
