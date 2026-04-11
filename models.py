@@ -153,6 +153,10 @@ class EnvState(BaseModel):
         default="",
         description="[COMPAT ONLY] Session ID injected by openenv-core",
     )
+    step_count: int = Field(
+        default=0,
+        description="[COMPAT ONLY] Step counter used by openenv-core",
+    )
 
     model_config = ConfigDict(use_enum_values=True)
 

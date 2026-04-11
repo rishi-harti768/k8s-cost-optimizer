@@ -489,6 +489,7 @@ class K8sCostOptimizerEnvironment(Environment):
             prev_steal_pct=self._prev_steal_pct,
             steal_suppression_steps=self.steal_suppression_steps,
             episode_id=getattr(self, "episode_id", ""),
+            step_count=getattr(self, "step_count", self._step),
         )
 
     def render(self, mode: str = "human") -> Any:
