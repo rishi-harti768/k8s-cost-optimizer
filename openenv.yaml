@@ -1,6 +1,18 @@
 spec_version: 1
 name: k8s_cost_optimizer
+version: "0.1.0"
+description: "RL environment for proactive Kubernetes cost optimization."
 type: space
 runtime: fastapi
 app: server.app:app
 port: 7860
+tasks:
+  - name: cold_start
+    difficulty: easy
+    description: "Scale cluster from 0 to 5 replicas without SLA breach."
+  - name: efficient_squeeze
+    difficulty: medium
+    description: "Keep cpu_steal_pct < 20% across 24-hour sinusoidal load cycle."
+  - name: entropy_storm
+    difficulty: hard
+    description: "Issue REBALANCE_NODE before cpu_steal_pct exceeds 20%."

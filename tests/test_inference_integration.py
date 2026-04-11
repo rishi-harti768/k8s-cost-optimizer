@@ -16,16 +16,19 @@ from server.k8s_cost_optimizer_environment import (
 from graders import ColdStartGrader, EfficientSqueezeGrader, EntropyStormGrader
 from models import Action, ActionType
 
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).parent.parent
 
 @pytest.fixture
 def traces_available():
     """Check if trace files exist."""
     traces = [
-        "traces/trace_v1_coldstart.json",
-        "traces/trace_v1_squeeze.json",
-        "traces/trace_v1_entropy.json",
+        REPO_ROOT / "traces/trace_v1_coldstart.json",
+        REPO_ROOT / "traces/trace_v1_squeeze.json",
+        REPO_ROOT / "traces/trace_v1_entropy.json",
     ]
-    return all(os.path.exists(t) for t in traces)
+    return all(t.exists() for t in traces)
 
 
 class TestEnvironmentIntegration:
@@ -36,7 +39,7 @@ class TestEnvironmentIntegration:
         if not traces_available:
             pytest.skip("Trace files not available")
 
-        env = KubeCostEnv("traces/trace_v1_coldstart.json")
+        env = KubeCostEnv(str(REPO_ROOT / "traces/trace_v1_coldstart.json"))
         obs = env.reset()
 
         assert obs is not None
@@ -61,7 +64,7 @@ class TestEnvironmentIntegration:
         if not traces_available:
             pytest.skip("Trace files not available")
 
-        env = KubeCostEnv("traces/trace_v1_squeeze.json")
+        env = KubeCostEnv(str(REPO_ROOT / "traces/trace_v1_squeeze.json"))
         obs = env.reset()
 
         done = False
@@ -79,7 +82,7 @@ class TestEnvironmentIntegration:
         if not traces_available:
             pytest.skip("Trace files not available")
 
-        env = KubeCostEnv("traces/trace_v1_entropy.json")
+        env = KubeCostEnv(str(REPO_ROOT / "traces/trace_v1_entropy.json"))
         obs = env.reset()
 
         done = False
@@ -109,7 +112,7 @@ class TestGraderIntegration:
         if not traces_available:
             pytest.skip("Trace files not available")
 
-        env = KubeCostEnv("traces/trace_v1_coldstart.json")
+        env = KubeCostEnv(str(REPO_ROOT / "traces/trace_v1_coldstart.json"))
         env.reset()
 
         while not env._step >= len(env.steps_data) - 1:
@@ -125,7 +128,7 @@ class TestGraderIntegration:
         if not traces_available:
             pytest.skip("Trace files not available")
 
-        env1 = KubeCostEnv("traces/trace_v1_coldstart.json")
+        env1 = KubeCostEnv(str(REPO_ROOT / "traces/trace_v1_coldstart.json"))
         env1.reset()
         for _ in range(5):
             env1.step(Action(action_type=ActionType.MAINTAIN))
@@ -146,7 +149,7 @@ class TestTrajectoryValidation:
         if not traces_available:
             pytest.skip("Trace files not available")
 
-        env = KubeCostEnv("traces/trace_v1_coldstart.json")
+        env = KubeCostEnv(str(REPO_ROOT / "traces/trace_v1_coldstart.json"))
         env.reset()
 
         for _ in range(3):
@@ -170,7 +173,7 @@ class TestTrajectoryValidation:
         if not traces_available:
             pytest.skip("Trace files not available")
 
-        env = KubeCostEnv("traces/trace_v1_coldstart.json")
+        env = KubeCostEnv(str(REPO_ROOT / "traces/trace_v1_coldstart.json"))
         env.reset()
 
         for _ in range(10):

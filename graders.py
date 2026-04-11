@@ -16,7 +16,10 @@ Reference: PROJECT_SPEC.md §3 Phase 4 Grader Spec, §5 Audit Fixes, §6 The Thr
 import logging
 from typing import List
 
-from models import TrajectoryStep, ActionType
+try:
+    from k8s_cost_optimizer.models import TrajectoryStep, ActionType, HOURLY_BUDGET
+except ImportError:
+    from models import TrajectoryStep, ActionType, HOURLY_BUDGET
 
 __all__ = [
     "ColdStartGrader",
@@ -50,7 +53,7 @@ class _GraderConfig:
     LOOKBACK_WINDOW: int = 5
 
     # Cost budget for normalization
-    BUDGET: float = 100.0
+    BUDGET: float = HOURLY_BUDGET
 
 
 _CONFIG = _GraderConfig()
@@ -267,11 +270,43 @@ class EntropyStormGrader:
 
         # Special case: zero violations
         if not violation_indices:
-            # No violations means there was no observed breach to credit.
+            # Check if the agent took proactive REBALANCE_NODE actions on rising steal.
+            # An agent that genuinely suppressed all spikes should be credited.
+            proactive_count = sum(
+                1
+                for i, step in enumerate(trajectory)
+                if step.action == ActionType.REBALANCE_NODE
+                and (
+                    i == 0
+                    or trajectory[i].observation.cpu_steal_pct
+                    > trajectory[i - 1].observation.cpu_steal_pct
+                )
+            )
+            if proactive_count > 0:
+                # Reward proactive suppression: scale by fraction of steps with rising steal
+                rising_steal_steps = sum(
+                    1
+                    for i in range(1, len(trajectory))
+                    if trajectory[i].observation.cpu_steal_pct
+                    > trajectory[i - 1].observation.cpu_steal_pct
+                )
+                if rising_steal_steps > 0:
+                    success_rate = min(1.0, proactive_count / rising_steal_steps)
+                    return max(0.1, min(0.9, success_rate))
+            # No violations AND no proactive actions: passive agent
             return 0.1
 
         total_violations = len(violation_indices)
         proactive_actions = 0
+
+        def _is_rising_steal(step_index: int) -> bool:
+            """Return True if steal at step_index is higher than the preceding step."""
+            if step_index == 0:
+                return trajectory[step_index].observation.cpu_steal_pct > 0.0
+            return (
+                trajectory[step_index].observation.cpu_steal_pct
+                > trajectory[step_index - 1].observation.cpu_steal_pct
+            )
 
         # Step 2: For each violation, check the tight lookback window
         for violation_idx in violation_indices:
@@ -279,15 +314,6 @@ class EntropyStormGrader:
             window_end = (
                 violation_idx  # exclusive — we look at steps *before* the breach
             )
-
-            # Only count REBALANCE_NODE if it was taken on a rising steal signal.
-            def _is_rising_steal(step_index: int) -> bool:
-                if step_index == 0:
-                    return trajectory[step_index].observation.cpu_steal_pct > 0.0
-                return (
-                    trajectory[step_index].observation.cpu_steal_pct
-                    > trajectory[step_index - 1].observation.cpu_steal_pct
-                )
 
             rebalanced_proactively = any(
                 trajectory[j].action == ActionType.REBALANCE_NODE

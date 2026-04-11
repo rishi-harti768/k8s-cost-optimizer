@@ -28,7 +28,7 @@ class KubeCostEnvClient(
 
         return StepResult(
             observation=observation,
-            reward=payload.get("reward"),
+            reward=float(payload.get("reward", 0.0)),
             done=payload.get("done", False),
         )
 

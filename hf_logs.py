@@ -9,7 +9,7 @@ load_dotenv()
 REPO_ID = os.environ.get("REPO_ID", "rishi-harti768/k8s-cost-optimizer")
 # Your Hugging Face User Access Token (with READ permission)
 # This is DIFFERENT from the sk-... token used for LLMs
-HF_USER_TOKEN = os.environ.get("HF_USER_TOKEN")
+HF_USER_TOKEN: str | None = os.environ.get("HF_USER_TOKEN")
 
 
 def fetch_logs(repo_id: str, token: str, log_type: str = "app"):

@@ -122,6 +122,14 @@ def load_env():
 
 
 load_env()
+# Warn if any expected variable is still unset after .env loading
+for var in ("API_BASE_URL", "MODEL_NAME"):
+    if not os.environ.get(var):
+        print(
+            f"[INFO] {var} not set; using built-in default. "
+            "Set explicitly to override.",
+            file=sys.stderr,
+        )
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -370,21 +378,20 @@ class EnvironmentValidationError(Exception):
 
 
 def validate_env() -> None:
-    missing = [
-        k for k in ("API_BASE_URL", "MODEL_NAME", "HF_TOKEN") if not os.environ.get(k)
-    ]
-    if missing:
+    # Per submission pipeline spec: API_BASE_URL and MODEL_NAME have mandatory
+    # defaults and need not be set explicitly. Only HF_TOKEN is strictly required.
+    if not os.environ.get("HF_TOKEN"):
         raise EnvironmentValidationError(
-            f"Missing required environment variables: {', '.join(missing)}"
+            "HF_TOKEN is required but not set. "
+            "Set it with: export HF_TOKEN=<your-api-key>"
         )
 
 
 def main() -> None:
-    # Check for required environment variable first
-    if not os.environ.get("HF_TOKEN"):
-        print("[ERROR] HF_TOKEN environment variable is required", file=sys.stderr)
-        print("[ERROR] Set it with: set HF_TOKEN=your-api-key", file=sys.stderr)
-        print("[ERROR] Or for testing: set HF_TOKEN=dummy-token", file=sys.stderr)
+    try:
+        validate_env()
+    except EnvironmentValidationError as exc:
+        print(f"[ERROR] {exc}", file=sys.stderr)
         sys.exit(1)
 
     try:

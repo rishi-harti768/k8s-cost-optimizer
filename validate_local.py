@@ -68,13 +68,18 @@ def check_imports() -> bool:
         bool: True if all imports successful, False otherwise.
     """
     try:
+        import models  # noqa: F401
+        import graders  # noqa: F401
+        from server.k8s_cost_optimizer_environment import (
+            K8sCostOptimizerEnvironment,
+        )  # noqa: F401
         logger.info("  [PASS] All modules import successfully")
         return True
-    except ImportValidationError as e:
+    except ImportError as e:
         logger.error(f"  [FAIL] Import failed: {e}")
         return False
     except Exception as e:
-        logger.error(f"  [FAIL] Import failed: {e}")
+        logger.error(f"  [FAIL] Unexpected import error: {e}")
         return False
 
 
@@ -98,7 +103,7 @@ def check_openenv_yaml() -> bool:
             raise ConfigValidationError("YAML is empty")
         if "name" not in spec:
             raise ConfigValidationError("Missing 'name' field")
-        if spec["name"] not in ["kubecost-gym", "kubecost_gym"]:
+        if spec["name"] not in ["kubecost-gym", "kubecost_gym", "k8s_cost_optimizer"]:
             raise ConfigValidationError(f"Invalid name: {spec['name']}")
 
         if "version" not in spec:

@@ -49,11 +49,11 @@ def test_episode_trajectory_consistency():
 
 
 def test_graders_clamp_scores():
-    """Graders should clamp scores to [0.0, 1.0]."""
+    """Graders should return 0.1 for empty trajectories (spec §3 bounds [0.1, 0.9])."""
     empty = []
-    assert ColdStartGrader().grade(empty) == 0.0
-    assert EfficientSqueezeGrader().grade(empty) == 0.0
-    assert EntropyStormGrader().grade(empty) == 0.0
+    assert ColdStartGrader().grade(empty) == 0.1
+    assert EfficientSqueezeGrader().grade(empty) == 0.1
+    assert EntropyStormGrader().grade(empty) == 0.1
 
 
 def test_episode_terminates_at_trace_end():
@@ -108,21 +108,22 @@ def test_cost_penalty_bounded():
 def test_scale_actions_modify_replica_count():
     """Scale actions should modify internal replica count."""
     env = KubeCostEnv("traces/trace_v1_coldstart.json")
-    env.reset()
+    _ = env.reset()
+    initial_replicas = env.state().replicas  # Don't assume 0 — read from trace
 
     # Scale up
     obs1, _, _, _ = env.step(Action(action_type=ActionType.SCALE_UP_5))
     state1 = env.state()
-    assert state1.replicas == 5
+    assert state1.replicas == initial_replicas + 5
 
     obs2, _, _, _ = env.step(Action(action_type=ActionType.SCALE_UP_5))
     state2 = env.state()
-    assert state2.replicas == 10
+    assert state2.replicas == initial_replicas + 10
 
     # Scale down
     obs3, _, _, _ = env.step(Action(action_type=ActionType.SCALE_DOWN_1))
     state3 = env.state()
-    assert state3.replicas == 9
+    assert state3.replicas == initial_replicas + 9
 
 
 def test_rebalance_node_action():
@@ -136,7 +137,7 @@ def test_rebalance_node_action():
     # Verify the action was recorded in trajectory (graders use this for scoring)
     trajectory = env.trajectory
     assert len(trajectory) > 0
-    assert trajectory[-1].action == ActionType.REBALANCE_NODE
+    assert trajectory[-1].action == ActionType.REBALANCE_NODE.value
 
 
 def test_multiple_episodes_are_independent():

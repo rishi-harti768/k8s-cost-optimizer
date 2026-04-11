@@ -63,7 +63,7 @@ def test_remote_server():
 
     # 4. Perform a Step
     # Scaling replicas up by 5
-    action_payload = {"action": {"action_type": "SCALE_REPLICAS", "value": 5}}
+    action_payload = {"action": {"action_type": "SCALE_REPLICAS(+5)"}}
     try:
         resp = requests.post(
             f"{SPACE_URL}/step",

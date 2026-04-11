@@ -28,6 +28,12 @@ __all__ = [
 ]
 
 
+# ===== SHARED CONSTANTS =====
+
+HOURLY_BUDGET: float = 100.0
+"""Shared budget constant for reward and grader normalization."""
+
+
 # ===== ENUMS (Finite value sets) =====
 
 
@@ -98,11 +104,13 @@ class Observation(BaseModel):
     ) = Field(description="Per-node packing ratio; fixed 10-element vector [0-1]×10")
     reward: float = Field(
         default=0.0,
-        description="Reward signal for the step (OpenEnv reset response compatibility)",
+        description="[COMPAT ONLY] Harness reward slot — not observable state.",
+        exclude=True,  # exclude from agent obs dumps by default
     )
     done: bool = Field(
         default=False,
-        description="Episode termination flag (OpenEnv reset response compatibility)",
+        description="[COMPAT ONLY] Harness done slot — not observable state.",
+        exclude=True,
     )
 
     model_config = ConfigDict(use_enum_values=True)
@@ -135,6 +143,11 @@ class EnvState(BaseModel):
         ge=0,
         le=1,
         description="Previous-step steal % for proactive bonus calculation [0-1]",
+    )
+    steal_suppression_steps: int = Field(
+        ge=0,
+        default=0,
+        description="Remaining steps of REBALANCE steal suppression [0-3]",
     )
 
     model_config = ConfigDict(use_enum_values=True)
@@ -198,7 +211,7 @@ class TraceObservation(BaseModel):
         ge=0, description="Baseline replica count expected by the trace"
     )
     buffer_depth: int = Field(
-        ge=0, description="Baseline queue depth for the raw workload"
+        ge=0, le=500, description="Baseline queue depth [0-500]"
     )
     node_size_class: NodeSizeClass = Field(
         description="Baseline node tier for the raw workload"

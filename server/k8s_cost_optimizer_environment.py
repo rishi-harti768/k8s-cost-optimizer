@@ -24,6 +24,7 @@ try:
         TrajectoryStep,
         TraceData,
         TraceObservation,
+        HOURLY_BUDGET,
     )
 except ImportError:
     from models import (
@@ -35,6 +36,7 @@ except ImportError:
         TrajectoryStep,
         TraceData,
         TraceObservation,
+        HOURLY_BUDGET,
     )
 
 __all__ = [
@@ -84,8 +86,10 @@ class _EnvironmentConfig:
     }
     NODE_FROM_TIER = {v: k for k, v in NODE_TIER.items()}
 
+    import os as _os
+
     # Budget used in cost penalty: cost fraction = current_hourly_cost / BUDGET
-    HOURLY_BUDGET: float = 100.0
+    HOURLY_BUDGET: float = HOURLY_BUDGET
 
     # Reward bounds (spec §3.3)
     REWARD_MIN: float = -20.0
@@ -100,12 +104,12 @@ class _EnvironmentConfig:
     SLA_WARNING_MIN_MS: float = 200.0
 
     # Reward component weights
-    UPTIME_REWARD: float = 10.0
-    COST_PENALTY_RATE: float = 5.0
-    COST_PENALTY_CAP: float = 5.0
-    RAMP_PENALTY_RATE: float = 5.0
-    SLA_BREACH_PENALTY: float = 20.0
-    PROACTIVE_BONUS: float = 0.5
+    UPTIME_REWARD: float = float(_os.getenv("ENV_UPTIME_REWARD", "10.0"))
+    COST_PENALTY_RATE: float = float(_os.getenv("ENV_COST_PENALTY_RATE", "5.0"))
+    COST_PENALTY_CAP: float = float(_os.getenv("ENV_COST_PENALTY_CAP", "5.0"))
+    RAMP_PENALTY_RATE: float = float(_os.getenv("ENV_RAMP_PENALTY_RATE", "5.0"))
+    SLA_BREACH_PENALTY: float = float(_os.getenv("ENV_SLA_BREACH_PENALTY", "20.0"))
+    PROACTIVE_BONUS: float = float(_os.getenv("ENV_PROACTIVE_BONUS", "0.5"))
 
 
 _CONFIG = _EnvironmentConfig()
@@ -200,8 +204,11 @@ def compute_reward(observation: Observation, previous_steal_pct: float) -> float
     uptime = 1.0 if p99 < _CONFIG.SLA_THRESHOLD_MS else 0.0
     uptime_reward = _CONFIG.UPTIME_REWARD * uptime
 
-    # Cost penalty (uncapped, so overspend is penalized correctly)
-    cost_penalty = _CONFIG.COST_PENALTY_RATE * cost_fraction
+    # Cost penalty (capped per spec §3.3)
+    cost_penalty = min(
+        _CONFIG.COST_PENALTY_RATE * cost_fraction,
+        _CONFIG.COST_PENALTY_CAP,
+    )
 
     # Ramp penalty (dense signal in warning zone [200, 300))
     ramp_penalty = 0.0
@@ -302,7 +309,7 @@ class K8sCostOptimizerEnvironment(Environment):
     # ------------------------------------------------------------------
 
     # Enable concurrent WebSocket sessions.
-    SUPPORTS_CONCURRENT_SESSIONS: bool = False
+    SUPPORTS_CONCURRENT_SESSIONS: bool = True
 
     def __init__(self, trace_path: str = "traces/trace_v1_coldstart.json") -> None:
         """
@@ -356,6 +363,11 @@ class K8sCostOptimizerEnvironment(Environment):
         Resets the step counter to 0, re-seeds mutable cluster state from
         the very first trace step, and returns the matching Observation.
         """
+        if not self.steps_data:
+            raise TraceLoadError(
+                f"Trace '{self.trace_path}' contains no steps. Cannot reset."
+            )
+
         self._step = 0
         self._trajectory = []
 
@@ -396,17 +408,34 @@ class K8sCostOptimizerEnvironment(Environment):
             5. Compute reward from new observation.
             6. Determine done, return 4-tuple.
         """
+        if self._current_obs is None:
+            raise EnvError(
+                "step() called before reset(). Call env.reset() to initialize the episode."
+            )
+
+        # Guard: reject calls after episode has ended
+        if self._step >= self.total_steps - 1:
+            logger.warning("step() called on a finished episode. Call reset() first.")
+            return self._current_obs, 0.0, True, {"step": self._step, "terminal": True}
+
         # 0. Validate action
         validate_action(action)
+
+        # Causal chain for proactive bonus (order is load-bearing):
+        #   1. Capture steal from CURRENT obs as "previous" for this step's comparison.
+        #   2. Apply action — REBALANCE sets steal_suppression_steps=3.
+        #   3. Build NEW obs — suppression reduces steal in _build_observation.
+        #   4. Reward uses NEW obs steal vs captured "previous" steal → bonus fires at t+1.
+        if self._current_obs is not None:
+            self._prev_steal_pct = self._current_obs.cpu_steal_pct
 
         self._step += 1
 
         if self._step >= self.total_steps:
-            done = True
-            return self._current_obs, 0.0, done, {}
-
-        if self._current_obs is not None:
-            self._prev_steal_pct = self._current_obs.cpu_steal_pct
+            raise EnvError(
+                f"step() called with _step={self._step} >= total_steps={self.total_steps}. "
+                "Call reset() to start a new episode."
+            )
 
         # Apply the agent action first so the next observation reflects capacity changes.
         self._apply_action(action)
@@ -457,6 +486,7 @@ class K8sCostOptimizerEnvironment(Environment):
             replicas=self._replicas,
             node_size=self._node_size,
             prev_steal_pct=self._prev_steal_pct,
+            steal_suppression_steps=self.steal_suppression_steps,
         )
 
     def render(self, mode: str = "human") -> Any:
@@ -527,6 +557,14 @@ class K8sCostOptimizerEnvironment(Environment):
         elif action_type == ActionType.MAINTAIN:
             pass
 
+        else:
+            # Should be unreachable if Pydantic validation works correctly.
+            # Log loudly if a new ActionType is added without updating this method.
+            logger.error(
+                f"_apply_action: unhandled ActionType '{action_type}'. "
+                "Treating as MAINTAIN. Update _apply_action() to handle new actions."
+            )
+
     def _calculate_reward(self) -> float:
         """
         Calculate reward signal for the current step.
@@ -557,6 +595,8 @@ class K8sCostOptimizerEnvironment(Environment):
 
     def _compute_current_cost(self) -> float:
         """Compute actual hourly cost based on current node size and replica count."""
+        # Pricing model per spec §4: S=$10/hr, M=$20/hr, L=$40/hr + $1/replica.
+        # These are intentionally fixed to keep the reward signal deterministic.
         base_costs = {
             NodeSizeClass.SMALL: 10.0,
             NodeSizeClass.MEDIUM: 20.0,
@@ -579,9 +619,8 @@ class K8sCostOptimizerEnvironment(Environment):
                 1.0, max(trace_obs.base_steal_pct, (cpu_usage - 90.0) / 10.0)
             )
         else:
-            raw_steal_pct = max(
-                trace_obs.base_steal_pct * 0.5, trace_obs.base_steal_pct
-            )
+            # CPU is not overloaded: reduce noisy-neighbour steal proportionally
+            raw_steal_pct = trace_obs.base_steal_pct * 0.5
 
         if self.steal_suppression_steps > 0:
             steal_pct = round(raw_steal_pct * 0.2, 4)

@@ -74,7 +74,7 @@ def generate_sinusoidal_trace(task_name, difficulty, steps=None):
             "base_error_rate": round(min(1.0, base_error), 4),
             "base_steal_pct": round(steal_pct, 4),
             "active_replicas": active_replicas,
-            "buffer_depth": 80 + i * 3,
+            "buffer_depth": min(300, 80 + i * 3),  # cap at 300 to prevent observation explosion
             "node_size_class": node_size,
             "current_hourly_cost": round(current_cost, 2),
             "node_bin_density": [
