@@ -183,11 +183,12 @@ def log_step(step: int, action: str, reward: float, done: bool) -> None:
 
 
 def log_end(success: bool, steps: int, score: float, rewards: List[float]) -> None:
-    # Format: [END] success=<true|false> steps=<n> score=<score> rewards=<r1,r2,...,rn>
+    # Format: [END] success=<true|false> steps=<n> rewards=<r1,r2,...,rn>
     rewards_str = ",".join(f"{r:.2f}" for r in rewards)
     success_val = str(success).lower()
+    # score removed from telemetry to match OpenEnv strict parsing rules
     print(
-        f"[END] success={success_val} steps={steps} score={score:.3f} rewards={rewards_str}",
+        f"[END] success={success_val} steps={steps} rewards={rewards_str}",
         flush=True,
     )
 
@@ -336,6 +337,7 @@ class CostOptimizerAgent:
         score = 0.0
         rewards = []
         success = False
+        env = None
 
         try:
             env = KubeCostEnv(trace_path)
@@ -362,6 +364,10 @@ class CostOptimizerAgent:
             )
             score = 0.1
             success = False
+
+        finally:
+            if env is not None:
+                env.close()
 
         log_end(success, total_steps, score, rewards)
         return score
