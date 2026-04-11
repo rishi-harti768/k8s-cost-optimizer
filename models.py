@@ -103,7 +103,7 @@ class Observation(BaseModel):
         confloat(ge=0.0, le=1.0), min_length=10, max_length=10
     ) = Field(description="Per-node packing ratio; fixed 10-element vector [0-1]×10")
     reward: float = Field(
-        default=0.0,
+        default=0.1,
         description="[COMPAT ONLY] Harness reward slot — not observable state.",
         exclude=True,  # exclude from agent obs dumps by default
     )

@@ -10,6 +10,7 @@ Reference: PROJECT_SPEC.md §2 OpenEnv Interface, §3 Reward Spec, §4 Environme
 
 import json
 import logging
+import os
 from pathlib import Path
 from typing import Any, Dict, Tuple
 from openenv.core import Environment
@@ -46,10 +47,36 @@ __all__ = [
     "validate_action",
     "get_replica_delta",
     "EnvError",
+    "get_grader_for_task",
 ]
 
 # Configure module logger
 logger = logging.getLogger(__name__)
+
+
+def get_grader_for_task(task_name: str) -> Any:
+    """Factory to get the appropriate grader for a task."""
+    try:
+        from graders import ColdStartGrader, EfficientSqueezeGrader, EntropyStormGrader
+    except ImportError:
+        # Fallback for internal module structure
+        try:
+            from k8s_cost_optimizer.graders import (
+                ColdStartGrader,
+                EfficientSqueezeGrader,
+                EntropyStormGrader,
+            )
+        except ImportError:
+            return None
+
+    graders = {
+        "cold_start": ColdStartGrader,
+        "efficient_squeeze": EfficientSqueezeGrader,
+        "entropy_storm": EntropyStormGrader,
+    }
+    grader_cls = graders.get(task_name)
+    return grader_cls() if grader_cls else None
+
 
 # ===== CUSTOM EXCEPTIONS =====
 
@@ -86,8 +113,6 @@ class _EnvironmentConfig:
     }
     NODE_FROM_TIER = {v: k for k, v in NODE_TIER.items()}
 
-    import os as _os
-
     # Budget used in cost penalty: cost fraction = current_hourly_cost / BUDGET
     HOURLY_BUDGET: float = HOURLY_BUDGET
 
@@ -104,12 +129,12 @@ class _EnvironmentConfig:
     SLA_WARNING_MIN_MS: float = 200.0
 
     # Reward component weights
-    UPTIME_REWARD: float = float(_os.getenv("ENV_UPTIME_REWARD", "10.0"))
-    COST_PENALTY_RATE: float = float(_os.getenv("ENV_COST_PENALTY_RATE", "5.0"))
-    COST_PENALTY_CAP: float = float(_os.getenv("ENV_COST_PENALTY_CAP", "5.0"))
-    RAMP_PENALTY_RATE: float = float(_os.getenv("ENV_RAMP_PENALTY_RATE", "5.0"))
-    SLA_BREACH_PENALTY: float = float(_os.getenv("ENV_SLA_BREACH_PENALTY", "20.0"))
-    PROACTIVE_BONUS: float = float(_os.getenv("ENV_PROACTIVE_BONUS", "0.5"))
+    UPTIME_REWARD: float = float(os.getenv("ENV_UPTIME_REWARD", "10.0"))
+    COST_PENALTY_RATE: float = float(os.getenv("ENV_COST_PENALTY_RATE", "5.0"))
+    COST_PENALTY_CAP: float = float(os.getenv("ENV_COST_PENALTY_CAP", "5.0"))
+    RAMP_PENALTY_RATE: float = float(os.getenv("ENV_RAMP_PENALTY_RATE", "5.0"))
+    SLA_BREACH_PENALTY: float = float(os.getenv("ENV_SLA_BREACH_PENALTY", "20.0"))
+    PROACTIVE_BONUS: float = float(os.getenv("ENV_PROACTIVE_BONUS", "0.5"))
 
 
 _CONFIG = _EnvironmentConfig()
@@ -421,11 +446,7 @@ class K8sCostOptimizerEnvironment(Environment):
         # 0. Validate action
         validate_action(action)
 
-        # Causal chain for proactive bonus (order is load-bearing):
-        #   1. Capture steal from CURRENT obs as "previous" for this step's comparison.
-        #   2. Apply action — REBALANCE sets steal_suppression_steps=3.
-        #   3. Build NEW obs — suppression reduces steal in _build_observation.
-        #   4. Reward uses NEW obs steal vs captured "previous" steal → bonus fires at t+1.
+        # Capture current steal for next calculation
         if self._current_obs is not None:
             self._prev_steal_pct = self._current_obs.cpu_steal_pct
 
@@ -449,7 +470,7 @@ class K8sCostOptimizerEnvironment(Environment):
         reward: float = self._calculate_reward()
         done: bool = self._step >= self.total_steps - 1
 
-        # 10. Build info dict
+        # Build info dict
         info: Dict[str, Any] = {
             "step": self._step,
             "task_name": self.trace.task_name,
@@ -461,7 +482,7 @@ class K8sCostOptimizerEnvironment(Environment):
             "trace_reason": trace_step.dynamics.get("reason", ""),
         }
 
-        # 11. Log to trajectory (without redundant metrics)
+        # Log to trajectory
         self._trajectory.append(
             TrajectoryStep(
                 observation=self._current_obs,
@@ -492,6 +513,39 @@ class K8sCostOptimizerEnvironment(Environment):
             step_count=getattr(self, "step_count", self._step),
         )
 
+    def grade(self, trajectory: list | None = None) -> float:
+        """
+        Grade the episode trajectory using the task-specific grader.
+
+        This is a mandatory method for the OpenEnv platform to retrieve
+        task scores at the end of an episode.
+
+        Args:
+            trajectory: Optional list of TrajectoryStep. If None, uses self._trajectory.
+
+        Returns:
+            float: Score strictly in [0.1, 0.9].
+        """
+        if trajectory is None:
+            trajectory = self._trajectory
+
+        if not trajectory:
+            logger.warning(f"grade() called for {self.task_name} with empty trajectory")
+            return 0.1
+
+        grader = get_grader_for_task(self.task_name)
+        if grader:
+            try:
+                score = grader.grade(trajectory)
+                # Ensure we return a float and follow strict bounds
+                return float(max(0.1, min(0.9, score)))
+            except Exception as e:
+                logger.error(f"Error during grading task '{self.task_name}': {e}")
+                return 0.1
+
+        logger.warning(f"No grader found for task '{self.task_name}'. Returning 0.1.")
+        return 0.1
+
     def render(self, mode: str = "human") -> Any:
         """Render environment state (stub)."""
         return None
@@ -505,88 +559,38 @@ class K8sCostOptimizerEnvironment(Environment):
     # ------------------------------------------------------------------
 
     def _apply_action(self, action: Action) -> None:
-        """
-        Apply action to environment state (internal helper, called by step).
-
-        Translates the ActionType enum value into concrete state mutations:
-
-        SCALE_REPLICAS(±N):
-            self._replicas += N, clamped to [REPLICAS_MIN, REPLICAS_MAX].
-        UPGRADE_NODE:
-            Advances node tier by one level (S→M or M→L). Irreversible for 1 step
-            (the trace physics will reflect the new size from the next step onward).
-        REBALANCE_NODE:
-            Sets a rebalance signal; no direct replica/node change. The agent earns
-            the ProactiveBonus via _calculate_reward() if steal is dropping.
-        MAINTAIN:
-            No state mutation.
-
-        Reference: PROJECT_SPEC.md §4 Action Space
-        """
+        """Apply action to environment state."""
         action_type = action.action_type
 
-        # ---- SCALE_REPLICAS branch ----
         if action_type == ActionType.SCALE_DOWN_5:
             self._replicas = max(_REPLICAS_MIN, self._replicas - 5)
-
         elif action_type == ActionType.SCALE_DOWN_1:
             self._replicas = max(_REPLICAS_MIN, self._replicas - 1)
-
         elif action_type == ActionType.SCALE_UP_1:
             self._replicas = min(_REPLICAS_MAX, self._replicas + 1)
-
         elif action_type == ActionType.SCALE_UP_5:
             self._replicas = min(_REPLICAS_MAX, self._replicas + 5)
-
         elif action_type == ActionType.SCALE_UP_10:
             self._replicas = min(_REPLICAS_MAX, self._replicas + 10)
-
         elif action_type == ActionType.SCALE_UP_20:
-            # Audit Fix 04: emergency burst absorption for hard task
             self._replicas = min(_REPLICAS_MAX, self._replicas + 20)
-
-        # ---- UPGRADE_NODE: irreversible for 1 step ----
         elif action_type == ActionType.UPGRADE_NODE:
             current_tier = _NODE_TIER[self._node_size]
             next_tier = min(current_tier + 1, len(_NODE_TIER) - 1)
             self._node_size = _NODE_FROM_TIER[next_tier]
-
-        # ---- REBALANCE_NODE: proactive signal (temporary noisy-neighbor relief) ----
         elif action_type == ActionType.REBALANCE_NODE:
-            # Grants a short window of reduced steal to make the action causal.
             self.steal_suppression_steps = 3
-
-        # ---- MAINTAIN: explicit no-op ----
         elif action_type == ActionType.MAINTAIN:
             pass
-
         else:
-            # Should be unreachable if Pydantic validation works correctly.
-            # Log loudly if a new ActionType is added without updating this method.
-            logger.error(
-                f"_apply_action: unhandled ActionType '{action_type}'. "
-                "Treating as MAINTAIN. Update _apply_action() to handle new actions."
-            )
+            logger.error(f"_apply_action: unhandled ActionType '{action_type}'.")
 
     def _calculate_reward(self) -> float:
-        """
-        Calculate reward signal for the current step.
-
-        Returns:
-            float: Reward in range [-20.0, +10.5].
-        """
+        """Calculate reward signal for the current step."""
         obs = self._current_obs
         if obs is None:
-            return 0.0
+            return 0.1
         return compute_reward(obs, self._prev_steal_pct)
-
-    # ------------------------------------------------------------------
-    # Private utility
-    # ------------------------------------------------------------------
-
-    # ------------------------------------------------------------------
-    # Accessors (convenience)
-    # ------------------------------------------------------------------
 
     def _get_node_capacity_multiplier(self) -> float:
         """Return capacity multiplier for the current node size."""
@@ -598,8 +602,6 @@ class K8sCostOptimizerEnvironment(Environment):
 
     def _compute_current_cost(self) -> float:
         """Compute actual hourly cost based on current node size and replica count."""
-        # Pricing model per spec §4: S=$10/hr, M=$20/hr, L=$40/hr + $1/replica.
-        # These are intentionally fixed to keep the reward signal deterministic.
         base_costs = {
             NodeSizeClass.SMALL: 10.0,
             NodeSizeClass.MEDIUM: 20.0,
@@ -610,35 +612,25 @@ class K8sCostOptimizerEnvironment(Environment):
     def _build_observation(self, trace_obs: TraceObservation) -> Observation:
         """Build the agent-facing Observation from raw trace demand and current state."""
         capacity = max(1.0, self._replicas * self._get_node_capacity_multiplier())
-
         cpu_usage = min(100.0, (trace_obs.base_cpu_demand / capacity) * 100.0)
         mem_usage = min(100.0, (trace_obs.base_mem_demand / capacity) * 100.0)
-
         demand_pressure = max(0.0, (cpu_usage - 70.0) / 30.0)
         p99 = max(40.0, trace_obs.base_latency_ms * (1.0 + demand_pressure * 0.75))
-
         if cpu_usage > 90.0:
-            raw_steal_pct = min(
-                1.0, max(trace_obs.base_steal_pct, (cpu_usage - 90.0) / 10.0)
-            )
+            raw_steal_pct = min(1.0, max(trace_obs.base_steal_pct, (cpu_usage - 90.0) / 10.0))
         else:
-            # CPU is not overloaded: reduce noisy-neighbour steal proportionally
             raw_steal_pct = trace_obs.base_steal_pct * 0.5
-
         if self.steal_suppression_steps > 0:
             steal_pct = round(raw_steal_pct * 0.2, 4)
             self.steal_suppression_steps -= 1
         else:
             steal_pct = round(raw_steal_pct, 4)
-
         error_rate = trace_obs.base_error_rate
         if cpu_usage > 80.0:
             error_rate = min(1.0, error_rate + (cpu_usage - 80.0) / 60.0)
         else:
             error_rate = min(1.0, error_rate * (0.5 + cpu_usage / 200.0))
-
         buffer_depth = int(trace_obs.buffer_depth * (1.0 + cpu_usage / 150.0))
-
         return Observation(
             cpu_usage_pct=round(cpu_usage, 4),
             mem_usage_pct=round(mem_usage, 4),

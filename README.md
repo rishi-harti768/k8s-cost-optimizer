@@ -11,73 +11,89 @@ tags:
 
 # KubeCost-Gym v3.1
 
-KubeCost-Gym v3.1 simulates a Kubernetes cluster. It provides a deterministic reinforcement learning environment to train agents in proactive cost optimization. 
+KubeCost-Gym v3.1 simulates a Kubernetes cluster autoscaling environment for reinforcement learning agents. Agents must balance infrastructure costs against service reliability by managing replica counts and node sizes.
 
-## Environment Dynamics
+## Technical Specifications
 
-The simulation balances infrastructure cost against system reliability. The environment derives all dynamics from pre-recorded JSON traces to guarantee absolute determinism. 
+The environment adheres to the OpenEnv protocol and runs within a constrained hardware profile (2 vCPU, 8 GB RAM).
 
-The environment rewards successful outcomes, never specific actions. The reward formula balances service uptime against hourly cost. It applies a continuous linear penalty ramp for tail latencies between 200ms and 300ms. Agents earn proactive bonuses by stabilizing the cluster before latency thresholds breach.
+### Observation Space
 
-## Setup Instructions
+The agent receives a 10-dimensional observation at each step.
 
-Ensure your system runs Python 3.10 or newer.
+| Field | Range | Description |
+|---|---|---|
+| `cpu_usage_pct` | [0, 100] | Cluster CPU utilization (%) |
+| `mem_usage_pct` | [0, 100] | Cluster memory utilization (%) |
+| `p99_latency_ms` | [0, ∞) | Tail latency (SLA threshold: 300ms) |
+| `http_error_rate` | [0, 1] | Fraction of failed requests |
+| `cpu_steal_pct` | [0, 1] | CPU time lost to noisy neighbors |
+| `active_replicas` | [0, 200] | Count of running pods |
+| `buffer_depth` | [0, ∞) | Count of requests in queue |
+| `node_size_class` | {S, M, L} | Current server tier |
+| `current_hourly_cost` | [0, ∞) | Current USD spend per hour |
+| `node_bin_density` | [0, 1] × 10 | Per-node resource packing ratios |
 
-1. **Install dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
+### Action Space
 
-2. **Set environment variables:**
-   - `API_BASE_URL`: Base URL for the LLM API.
-   - `MODEL_NAME`: Name of the target model.
-   - `HF_TOKEN`: HuggingFace authentication token.
+Agents select from 9 discrete actions to modify cluster capacity.
 
-3. **Run inference:**
-   ```bash
-   python inference.py
-   ```
+| Action | Result |
+|---|---|
+| `SCALE_REPLICAS(-5)` | Subtract 5 pods |
+| `SCALE_REPLICAS(-1)` | Subtract 1 pod |
+| `MAINTAIN` | No change |
+| `SCALE_REPLICAS(+1)` | Add 1 pod |
+| `SCALE_REPLICAS(+5)` | Add 5 pods |
+| `SCALE_REPLICAS(+10)` | Add 10 pods |
+| `SCALE_REPLICAS(+20)` | Add 20 pods (emergency burst) |
+| `UPGRADE_NODE` | Increment node tier (S → M or M → L) |
+| `REBALANCE_NODE` | Suppress steal for 3 steps |
 
-## Observation Space
+## Scoring and Rewards
 
-Agents perceive the environment through a dimensionally fixed, typed observation space.
+The environment evaluates agents based on three metrics: Uptime, Cost, and Proactivity.
 
-| Field | Type | Range | Purpose |
-| --- | --- | --- | --- |
-| `cpu_usage_pct` | Float | [0, 100] | Cluster-wide CPU utilization |
-| `mem_usage_pct` | Float | [0, 100] | Cluster-wide memory utilization |
-| `p99_latency_ms` | Float | [0, ∞) | Tail latency; SLA threshold equals 300ms |
-| `http_error_rate` | Float | [0, 1] | Request failure rate |
-| `cpu_steal_pct` | Float | [0, 1] | Noisy-neighbor indicator |
-| `active_replicas` | Integer | [0, ∞) | Running pod count |
-| `buffer_depth` | Integer | [0, ∞) | Request queue depth |
-| `node_size_class` | Enum | {S, M, L} | Current node tier |
-| `current_hourly_cost`| Float | [0, ∞) | USD/hour spend |
-| `node_bin_density` | List[Float] | [0, 1] × 10 | Per-node packing; fixed 10-element vector |
+### Reward Function
+The per-step reward ($R$) follows a weighted formula:
+$$R = (10.0 \times Uptime) - (5.0 \times \frac{Cost}{Budget}) - RampPenalty(p99) - SLABreach(p99) + ProactiveBonus$$
 
-## Action Space
+*   **Uptime**: +1.0 if $p99 < 300ms$, else 0.
+*   **Ramp Penalty**: Linear penalty between 200ms and 300ms to provide a dense training signal.
+*   **SLA Breach**: -20.0 penalty if $p99 \ge 300ms$.
+*   **Proactive Bonus**: +0.5 if $p99 < 300ms$ and CPU steal decreased from the previous step.
 
-Agents manage the cluster by issuing discrete scaling and balancing commands.
+### Task Scoring
+Task graders normalize performance into a score between **0.1** and **0.9**. 
+*   **0.1**: Failure, empty trajectory, or total SLA breach.
+*   **0.9**: Optimal performance with zero SLA violations and minimal cost.
 
-- **`SCALE_REPLICAS(-5)`**: Aggressive scale-down.
-- **`SCALE_REPLICAS(-1)`**: Gentle scale-down.
-- **`MAINTAIN`**: Hold current state.
-- **`SCALE_REPLICAS(+1)`**: Gentle scale-up.
-- **`SCALE_REPLICAS(+5)`**: Moderate scale-up.
-- **`SCALE_REPLICAS(+10)`**: Large scale-up.
-- **`SCALE_REPLICAS(+20)`**: Emergency burst absorption.
-- **`UPGRADE_NODE`**: Vertical scale.
-- **`REBALANCE_NODE`**: Deterministic rebalance.
+## Tasks
 
-## Core Tasks
+### 1. Cold Start (Easy)
+Scale a cluster from 0 to 5 replicas. Initial error rates exceed 60%. The agent succeeds by bringing replicas online quickly enough to satisfy the 300ms SLA.
 
-The environment trains agents through three progressive tasks. Each task requires a unique decision-making strategy.
+### 2. Efficient Squeeze (Medium)
+Navigate a 24-hour sinusoidal load cycle. The agent must scale down during troughs to save cost and scale up before peak demand breaches the SLA.
 
-### Task 1: Cold Start (Easy)
-Scale the cluster from zero replicas to five in minimum steps. Complete this operation without breaching the SLA threshold.
+### 3. Entropy Storm (Hard)
+Defend against bursty noisy-neighbor interference. The agent must use leading indicators (latent steal signals) to issue `REBALANCE_NODE` before $cpu\_steal\_pct$ exceeds 20%.
 
-### Task 2: Efficient Squeeze (Medium)
-Maintain sub-20% steal percentage across a 24-hour sinusoidal load cycle. Minimize infrastructure cost simultaneously.
+## Development
 
-### Task 3: Entropy Storm (Hard)
-Anticipate noisy-neighbor issues using leading indicators. Issue `REBALANCE_NODE` before the steal percentage exceeds 20%.
+### Setup
+1. Install Python 3.10+.
+2. Install dependencies: `pip install -r requirements.txt`.
+3. Set environment variables: `API_BASE_URL`, `MODEL_NAME`, `HF_TOKEN`.
+
+### Execution
+*   **Generate Traces**: `python generate_traces.py`
+*   **Run Inference**: `python inference.py`
+*   **Validate Locally**: `python validate_local.py`
+
+## Repository Structure
+
+*   `server/`: Contains `K8sCostOptimizerEnvironment` and the FastAPI app.
+*   `graders.py`: Implementation of the strict [0.1, 0.9] scoring logic.
+*   `models.py`: Pydantic definitions for all observation and action types.
+*   `traces/`: Deterministic workload data in JSON format.

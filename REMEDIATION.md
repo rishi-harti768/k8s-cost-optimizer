@@ -27,12 +27,12 @@
 -    )
 
 +def log_end(success: bool, steps: int, score: float, rewards: List[float]) -> None:
-+    # Format: [END] success=<true|false> steps=<n> rewards=<r1,r2,...,rn>
++    # Format: [END] success=<true|false> steps=<n> score=<0.00> rewards=<r1,r2,...,rn>
 +    rewards_str = ",".join(f"{r:.2f}" for r in rewards)
 +    success_val = str(success).lower()
-+    # score removed from telemetry to match OpenEnv strict parsing rules
++    # score must be included in telemetry within [0.1, 0.9] range
 +    print(
-+        f"[END] success={success_val} steps={steps} rewards={rewards_str}",
++        f"[END] success={success_val} steps={steps} score={score:.4f} rewards={rewards_str}",
 +        flush=True,
 +    )
 ```
@@ -61,7 +61,7 @@
         log_start(task_name, self.model_name)
 
         total_steps = 0
-        score = 0.0
+        score = 0.1
         rewards = []
         success = False
 +       env = None
