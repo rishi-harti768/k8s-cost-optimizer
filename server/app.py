@@ -13,8 +13,15 @@ except ImportError:
     from models import Action, Observation
     from server.k8s_cost_optimizer_environment import K8sCostOptimizerEnvironment
 
+class ServerK8sCostOptimizerEnvironment(K8sCostOptimizerEnvironment):
+    def step(self, action: Action) -> Observation:
+        obs, reward, done, info = super().step(action)
+        obs.reward = reward
+        obs.done = done
+        return obs
+
 app = create_app(
-    K8sCostOptimizerEnvironment,
+    ServerK8sCostOptimizerEnvironment,
     Action,
     Observation,
     env_name="k8s_cost_optimizer",
