@@ -149,6 +149,10 @@ class EnvState(BaseModel):
         default=0,
         description="Remaining steps of REBALANCE steal suppression [0-3]",
     )
+    episode_id: str = Field(
+        default="",
+        description="[COMPAT ONLY] Session ID injected by openenv-core",
+    )
 
     model_config = ConfigDict(use_enum_values=True)
 
