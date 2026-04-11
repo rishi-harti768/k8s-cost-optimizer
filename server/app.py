@@ -19,7 +19,6 @@ app = create_app(
     Observation,
     env_name="k8s_cost_optimizer",
     max_concurrent_envs=1,
-    readme_path="README.md",
 )
 
 

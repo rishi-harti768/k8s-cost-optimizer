@@ -474,6 +474,7 @@ class K8sCostOptimizerEnvironment(Environment):
 
         return self._current_obs, reward, done, info
 
+    @property
     def state(self) -> EnvState:
         """
         Get current environment state snapshot.
