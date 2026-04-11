@@ -86,4 +86,5 @@ EXPOSE 7860
 # Run the FastAPI server
 # The module path is constructed to work with the /app/env structure
 ENV ENABLE_WEB_INTERFACE=true
+ENV ENV_README_PATH=/app/env/README.md
 CMD ["sh", "-c", "cd /app/env && uvicorn server.app:app --host 0.0.0.0 --port 7860"]
